@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { User, MapPin, FileText, Calendar, StickyNote, Image as ImageIcon, Type, Sun, Moon, Search, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronsUp, ChevronsDown, FolderOpen, Minus, Activity, CornerDownRight, Save, Upload, Download, Trash2, Fingerprint, Layers, Maximize, BoxSelect, CheckCircle, XCircle, Star, AlertTriangle, Eye, Skull, Lock, PenTool, ArrowUp, ArrowDown, Palette, Link, LogOut, Cloud, CloudOff, Loader2, WifiOff, RefreshCw } from 'lucide-react';
+import { User, MapPin, FileText, Calendar, StickyNote, Image as ImageIcon, Type, Sun, Moon, Search, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronsUp, ChevronsDown, FolderOpen, Minus, Activity, CornerDownRight, Save, Upload, Download, Trash2, Fingerprint, Layers, Maximize, BoxSelect, CheckCircle, XCircle, Star, AlertTriangle, Eye, Skull, Lock, PenTool, ArrowUp, ArrowDown, Palette, Link, LogOut, Cloud, CloudOff, Loader2, WifiOff, RefreshCw, FileDown } from 'lucide-react';
 
-const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, connectionLineType, setConnectionLineType, lastSaved, onSave, onLoad, onClear, onHelp, isDarkMode, toggleTheme, searchTerm, setSearchTerm, onExport, isOpen, onToggle, onOpenCaseManager, currentBoardName, onToggleZen, onNextMatch, onPrevMatch, onToggleBg, onLogout, currentUser, isSyncing, syncError, onRetry }) => {
+const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, connectionLineType, setConnectionLineType, lastSaved, onSave, onLoad, onClear, onHelp, isDarkMode, toggleTheme, searchTerm, setSearchTerm, onExport, isOpen, onToggle, onOpenCaseManager, currentBoardName, onToggleZen, onNextMatch, onPrevMatch, onToggleBg, onLogout, currentUser, isSyncing, syncError, onRetry, onManualSave }) => {
   const fileInputRef = useRef(null);
   const [sectionsState, setSectionsState] = useState(() => {
     try {
@@ -170,9 +170,9 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
 
         {/* Grid de Acciones de Archivo */}
         <div className="grid grid-cols-3 gap-2">
-            <button onClick={onSave} className={`flex flex-col items-center justify-center p-2 border rounded transition-colors ${isDarkMode ? 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800 hover:text-white' : 'bg-white text-zinc-600 border-gray-200 hover:bg-gray-50 hover:text-black shadow-sm'}`} title="Guardar (JSON)">
-                <Save size={16} className="mb-1"/>
-                <span className="text-[9px] font-bold uppercase">Guardar</span>
+            <button onClick={onSave} className={`flex flex-col items-center justify-center p-2 border rounded transition-colors ${isDarkMode ? 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800 hover:text-white' : 'bg-white text-zinc-600 border-gray-200 hover:bg-gray-50 hover:text-black shadow-sm'}`} title="Descargar (JSON)">
+                <FileDown size={16} className="mb-1"/>
+                <span className="text-[9px] font-bold uppercase">Descargar</span>
             </button>
             <button onClick={() => fileInputRef.current.click()} className={`flex flex-col items-center justify-center p-2 border rounded transition-colors ${isDarkMode ? 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800 hover:text-white' : 'bg-white text-zinc-600 border-gray-200 hover:bg-gray-50 hover:text-black shadow-sm'}`} title="Cargar (JSON)">
                 <Upload size={16} className="mb-1"/>
@@ -186,7 +186,11 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
         <input type="file" name="file-upload" ref={fileInputRef} onChange={onLoad} className="hidden" accept=".json" />
 
         {/* Grid de Utilidades */}
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-3 gap-2">
+            <button onClick={onManualSave} title="Guardar cambios en la nube ahora" className={`py-2 border transition-colors text-[10px] uppercase font-bold rounded flex items-center justify-center gap-2 ${isDarkMode ? 'bg-zinc-900 text-zinc-400 border-zinc-800 hover:bg-zinc-800 hover:text-white' : 'bg-white text-zinc-600 border-gray-200 hover:bg-gray-50 hover:text-black shadow-sm'}`}>
+            <Save size={14} /> Guardar
+            </button>
+
             <button onClick={onClear} title="Borrar todo el contenido" className={`py-2 border transition-colors text-[10px] uppercase font-bold rounded flex items-center justify-center gap-2 ${isDarkMode ? 'bg-red-900/20 text-red-500 border-red-900/50 hover:bg-red-900/40' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}>
             <Trash2 size={14} /> Limpiar
             </button>

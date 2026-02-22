@@ -156,7 +156,6 @@ const Board = () => {
         setIsBoardLoading(true);
         setSyncError(null); // Limpiar errores previos
         boardDataLoadedRef.current = false; // Bloquear guardado al empezar a cargar
-        lastSavedDataRef.current = null; // Resetear referencia de guardado
         try {
           const data = await loadBoard(currentBoardId);
           if (data) {
@@ -164,6 +163,15 @@ const Board = () => {
             setEdges(data.edges || []);
             if (data.bgType) setBgType(data.bgType);
             boardDataLoadedRef.current = true; // Datos cargados, permitir guardado
+            
+            // Inicializar referencia de guardado para evitar falsos "cambios sin guardar" al inicio
+            const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
+            lastSavedDataRef.current = JSON.stringify({
+                nodes: data.nodes || [],
+                edges: data.edges || [],
+                bgType: data.bgType || 'cork',
+                name: boardName
+            });
           } else {
             // Si no hay datos, verificamos si el tablero es válido (está en la lista)
             const isValidBoard = boards.some(b => b.id === currentBoardId);
@@ -173,6 +181,14 @@ const Board = () => {
                 setNodes([]);
                 setEdges([]);
                 boardDataLoadedRef.current = true; 
+                
+                const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
+                lastSavedDataRef.current = JSON.stringify({
+                    nodes: [],
+                    edges: [],
+                    bgType: 'cork',
+                    name: boardName
+                });
             } else {
                 // Es un ID obsoleto o inválido. NO inicializamos ni permitimos guardar.
                 console.warn("ID de tablero obsoleto detectado, omitiendo carga para evitar sobrescritura.");
@@ -195,46 +211,61 @@ const Board = () => {
     fetchBoard();
   }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType, isBoardsSynced, boards, retryTrigger]);
 
-  // Efecto para guardar automáticamente en Firestore (Debounce)
-  useEffect(() => {
-    if (isBoardLoading || !boardDataLoadedRef.current || syncError) return; // PROTECCIÓN CRÍTICA: No guardar si hay error de sincronización
+  // --- FUNCIÓN DE GUARDADO MANUAL/PERIÓDICO ---
+  const saveCurrentBoard = React.useCallback(async (force = false) => {
+      if (!currentBoardId || !boardDataLoadedRef.current || isBoardLoading || syncError) return;
+      
+      const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
+      const dataToSave = {
+        nodes,
+        edges,
+        bgType,
+        name: boardName
+      };
+      
+      const dataString = JSON.stringify(dataToSave);
+      
+      // Solo guardar si hay cambios reales respecto a lo último guardado
+      if (!force && lastSavedDataRef.current === dataString) return;
 
-    const timer = setTimeout(() => {
-      if (currentBoardId) {
-        const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
-        
-        const dataToSave = {
-          nodes,
-          edges,
-          bgType,
-          name: boardName
-        };
-
-        // Evitar bucle infinito: Solo guardar si el contenido ha cambiado realmente
-        const dataString = JSON.stringify(dataToSave);
-        if (lastSavedDataRef.current === dataString) {
-            return;
-        }
-
-        // Guardar en la nube (Firestore)
-        saveBoard(currentBoardId, dataToSave);
-        
-        lastSavedDataRef.current = dataString;
-        setLastSaved(new Date());
+      try {
+          await saveBoard(currentBoardId, dataToSave);
+          lastSavedDataRef.current = dataString;
+          setLastSaved(new Date());
+          console.log("Guardado automático completado.");
+      } catch (error) {
+          console.error("Error al guardar:", error);
       }
-    }, 2000); // Guardar cada 2 segundos de inactividad
-    return () => clearTimeout(timer);
-  }, [nodes, edges, bgType, currentBoardId, saveBoard, boards, isBoardLoading, syncError]);
+  }, [currentBoardId, nodes, edges, bgType, boards, saveBoard, isBoardLoading, syncError]);
+
+  // Efecto para guardar periódicamente cada 5 minutos
+  useEffect(() => {
+    const interval = setInterval(saveCurrentBoard, 5 * 60 * 1000);
+    return () => clearInterval(interval);
+  }, [saveCurrentBoard]);
+
+  // Wrapper para guardar antes de cambiar de tablero
+  const handleSwitchBoardWrapper = async (boardId) => {
+      await saveCurrentBoard(); // Guardar cambios pendientes antes de salir
+      handleSwitchBoard(boardId);
+  };
 
   // Confirmación al cerrar la pestaña
   useEffect(() => {
     const handleBeforeUnload = (e) => {
-      e.preventDefault();
-      e.returnValue = ''; // Estándar para mostrar el diálogo del navegador
+      const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
+      const currentDataString = JSON.stringify({ nodes, edges, bgType, name: boardName });
+      
+      // Si hay cambios sin guardar, mostrar alerta del navegador
+      if (boardDataLoadedRef.current && lastSavedDataRef.current !== currentDataString) {
+        e.preventDefault();
+        e.returnValue = 'Tienes cambios sin guardar. ¿Seguro que quieres salir?';
+        return e.returnValue;
+      }
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
     return () => window.removeEventListener('beforeunload', handleBeforeUnload);
-  }, []);
+  }, [nodes, edges, bgType, currentBoardId, boards]);
 
   // Hook para pegar imágenes (Ctrl+V)
   useClipboard({ isInteractive, reactFlowInstance, takeSnapshot, setNodes });
@@ -313,7 +344,7 @@ const Board = () => {
     setNodes,
     setEdges,
     setBgType,
-    handleSwitchBoard,
+    handleSwitchBoard: handleSwitchBoardWrapper, // Usar wrapper que guarda antes de cambiar
     clearHistory,
     takeSnapshot,
     setConfirmModal
@@ -437,6 +468,7 @@ const Board = () => {
           isSyncing={isBoardLoading || !isBoardsSynced}
           syncError={syncError}
           onRetry={() => setRetryTrigger(prev => prev + 1)}
+          onManualSave={() => saveCurrentBoard(true)}
         />}
         
         <div 
@@ -623,7 +655,7 @@ const Board = () => {
           onClose={() => setCaseManagerOpen(false)}
           boards={boards}
           currentBoardId={currentBoardId}
-          onSwitch={handleSwitchBoard}
+          onSwitch={handleSwitchBoardWrapper} // Usar wrapper que guarda antes de cambiar
           onCreate={handleCreateBoard}
           onDelete={handleDeleteBoard}
           onRename={handleRenameBoard}
