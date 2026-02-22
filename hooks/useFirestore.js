@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
-import { db } from '../firebase';
+import { db } from './firebase';
 import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, serverTimestamp } from 'firebase/firestore';
-import { useAuth } from '../contexts/AuthContext';
+import { useAuth } from './AuthContext';
 
 const useFirestore = () => {
   const { currentUser } = useAuth();
@@ -10,6 +10,7 @@ const useFirestore = () => {
   const saveBoard = useCallback(async (boardId, boardData) => {
     if (!currentUser || !boardId) return;
     try {
+      console.log(`[NUBE] ☁️ Intentando guardar tablero ${boardId}...`);
       const boardRef = doc(db, 'users', currentUser.uid, 'boards', boardId);
       // Convertir a objeto plano para evitar errores de "undefined" en Firestore
       const cleanData = JSON.parse(JSON.stringify(boardData));
@@ -18,8 +19,9 @@ const useFirestore = () => {
         updatedAt: serverTimestamp(),
         ownerId: currentUser.uid 
       }, { merge: true });
+      console.log(`[NUBE] ✅ Guardado exitoso. Deberías ver la colección 'users' -> '${currentUser.uid}' en Firestore.`);
     } catch (e) {
-      console.error("Error al guardar en Firestore:", e);
+      console.error("❌ ERROR CRÍTICO al guardar en Firestore (Revisa Reglas o Conexión):", e);
     }
   }, [currentUser]);
 
@@ -27,6 +29,7 @@ const useFirestore = () => {
   const loadBoard = useCallback(async (boardId) => {
     if (!currentUser || !boardId) return null;
     try {
+      console.log(`[NUBE] Descargando tablero ${boardId}...`);
       const boardRef = doc(db, 'users', currentUser.uid, 'boards', boardId);
       const docSnap = await getDoc(boardRef);
       if (docSnap.exists()) {
@@ -35,7 +38,7 @@ const useFirestore = () => {
       return null;
     } catch (e) {
       console.error("Error al cargar de Firestore:", e);
-      return null;
+      throw e; // IMPORTANTE: Lanzar error para detener el auto-guardado en App.jsx
     }
   }, [currentUser]);
 
@@ -43,13 +46,14 @@ const useFirestore = () => {
   const getBoards = useCallback(async () => {
       if (!currentUser) return [];
       try {
+          console.log(`[NUBE] Sincronizando lista de casos...`);
           const boardsRef = collection(db, 'users', currentUser.uid, 'boards');
           const q = query(boardsRef);
           const querySnapshot = await getDocs(q);
           return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (e) {
           console.error("Error al obtener tableros:", e);
-          return [];
+          throw e; // IMPORTANTE: Lanzar error para saber que falló la conexión
       }
   }, [currentUser]);
 
