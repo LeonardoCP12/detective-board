@@ -1,9 +1,7 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../firebase';
-import axios from 'axios';
 import { Mail, Lock, User } from 'lucide-react';
-
 
 const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [name, setName] = useState('');
@@ -12,58 +10,45 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
+  const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e) => {
     e.preventDefault();
-     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setError('');
+    setSuccess('');
+
+    // Validar formato
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return setError('Por favor, introduce un correo electrónico válido.');
     }
 
-    // Validar correo temporal con MailCheck.ai
-    try {
-      const mailcheckUrl = `https://api.mailcheck.ai/email/${email}`;
-      const mailcheckResponse = await fetch(mailcheckUrl);
-      const mailcheckData = await mailcheckResponse.json();
-
-      if (mailcheckData.disposable) {
-        return setError('No se permiten correos temporales.');
-      }
-    } catch (error) {
-      console.error("Error al validar el correo con MailCheck.ai:", error);
-      return setError('Error al verificar el correo electrónico. Inténtalo de nuevo.');
-    }
-
-     //Validar dominio del correo
-     try {
-      const apiKey = 'YOUR_ABSTRACT_API_KEY'; // Replace with your actual API key
-      const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${email}`;
-      const response = await axios.get(url);
-      const data = response.data;
-      if (data.deliverability === 'UNDELIVERABLE') {
-             return setError('Por favor, introduce un correo electrónico válido.');
-           }
-     } catch (error) {
-           console.error('Error validating email domain:', error);
-         }
-    e.preventDefault();
+    // Validar contraseñas
     if (password !== confirmPassword) {
       return setError('Las contraseñas no coinciden.');
     }
-    setError('');
+
+    setLoading(true);
+
+    // Validar correo temporal con MailCheck.ai
+    try {
+      const mailcheckResponse = await fetch(`https://api.mailcheck.ai/email/${encodeURIComponent(email)}`);
+      const mailcheckData = await mailcheckResponse.json();
+      if (mailcheckData.disposable === true) {
+        setLoading(false);
+        return setError('No se permiten correos temporales.');
+      }
+    } catch (err) {
+      console.error("Error al validar con MailCheck.ai:", err);
+      // Si falla la API, continuamos igual
+    }
+
     try {
       const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      // Actualizar el perfil con el nombre
-      await updateProfile(userCredential.user, {
-        displayName: name
-      });
-
-      // Enviar correo de verificación
+      await updateProfile(userCredential.user, { displayName: name });
       await sendEmailVerification(userCredential.user);
       await auth.signOut();
-      alert('¡Te hemos enviado un correo para verificar tu dirección! Por favor, verifica antes de iniciar sesión.');
-
+      setSuccess('¡Cuenta creada! Te enviamos un correo de verificación. Revísalo antes de iniciar sesión.');
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
@@ -73,16 +58,17 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
       } else {
         setError('Error: ' + err.message);
       }
+    } finally {
+      setLoading(false);
     }
   };
-
 
   return (
     <div className="w-full max-w-xs mx-auto">
       <form onSubmit={handleSignUp} className={`shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4 border transition-colors duration-300 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'}`}>
         <h2 className={`text-2xl font-bold mb-6 text-center font-mono ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CREAR CUENTA</h2>
-         {error && <p className="bg-red-900/50 text-red-300 text-xs p-3 rounded mb-4">{error}</p>}
-         {success && <p className="bg-green-900/50 text-green-300 text-xs p-3 rounded mb-4">{success}</p>}
+        {error && <p className="bg-red-900/50 text-red-300 text-xs p-3 rounded mb-4">{error}</p>}
+        {success && <p className="bg-green-900/50 text-green-300 text-xs p-3 rounded mb-4">{success}</p>}
         <div className="mb-4">
           <label className={`block text-sm font-bold mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`} htmlFor="signup-name">Nombre</label>
           <div className="relative">
@@ -112,7 +98,9 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
           </div>
         </div>
         <div className="flex flex-col gap-4">
-          <button className="bg-red-600 hover:bg-red-700 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline uppercase transition-transform active:scale-95" type="submit">Registrarse</button>
+          <button disabled={loading} className="bg-red-600 hover:bg-red-700 disabled:opacity-50 text-white font-bold py-2 px-4 rounded focus:outline-none focus:shadow-outline uppercase transition-transform active:scale-95" type="submit">
+            {loading ? 'Verificando...' : 'Registrarse'}
+          </button>
         </div>
       </form>
       <p className={`text-center text-xs ${isDarkMode ? 'text-zinc-500' : 'text-gray-500'}`}>
