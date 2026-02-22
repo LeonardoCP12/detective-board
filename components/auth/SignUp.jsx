@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../firebase';
+import axios from 'axios';
 import { Mail, Lock, User } from 'lucide-react';
 
 const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
@@ -10,6 +11,7 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
 
+
   const handleSignUp = async (e) => {
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
@@ -17,14 +19,31 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
     }
 
     // Validar correo temporal con MailCheck.ai
-    const mailcheckUrl = `https://api.mailcheck.ai/email/${email}`;
-    const mailcheckResponse = await fetch(mailcheckUrl);
-    const mailcheckData = await mailcheckResponse.json();
+    try {
+      const mailcheckUrl = `https://api.mailcheck.ai/email/${email}`;
+      const mailcheckResponse = await fetch(mailcheckUrl);
+      const mailcheckData = await mailcheckResponse.json();
 
-    if (mailcheckData.disposable) {
-      return setError('No se permiten correos temporales.');
+      if (mailcheckData.disposable) {
+        return setError('No se permiten correos temporales.');
+      }
+    } catch (error) {
+      console.error("Error al validar el correo con MailCheck.ai:", error);
+      return setError('Error al verificar el correo electrónico. Inténtalo de nuevo.');
     }
 
+     //Validar dominio del correo
+     try {
+      const apiKey = 'YOUR_ABSTRACT_API_KEY'; // Replace with your actual API key
+      const url = `https://emailvalidation.abstractapi.com/v1/?api_key=${apiKey}&email=${email}`;
+      const response = await axios.get(url);
+      const data = response.data;
+      if (data.deliverability === 'UNDELIVERABLE') {
+             return setError('Por favor, introduce un correo electrónico válido.');
+           }
+     } catch (error) {
+           console.error('Error validating email domain:', error);
+         }
     e.preventDefault();
     if (password !== confirmPassword) {
       return setError('Las contraseñas no coinciden.');
@@ -39,6 +58,7 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
 
       // Enviar correo de verificación
       await sendEmailVerification(userCredential.user);
+      await auth.signOut(); // Cerrar sesión inmediatamente después del registro
       alert('¡Te hemos enviado un correo para verificar tu dirección! Por favor, verifica antes de iniciar sesión.');
 
     } catch (err) {
@@ -52,6 +72,7 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
       }
     }
   };
+
 
   return (
     <div className="w-full max-w-xs mx-auto">
