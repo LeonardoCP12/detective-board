@@ -522,7 +522,7 @@ const Board = () => {
               showInteractive={true} 
               onInteractiveChange={setIsInteractive} 
               fitViewOptions={{ duration: 800, padding: 0.2 }} 
-              style={{ bottom: '10px', left: '10px', transition: 'left 0.2s ease-in-out' }}
+              style={{ bottom: '10px', left: isSidebarOpen ? '340px' : '10px', transition: 'left 0.2s ease-in-out', zIndex: 1000 }}
             />}
             {!isZenMode && <MiniMap 
                 nodeColor={nodeColor} 

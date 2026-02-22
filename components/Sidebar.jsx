@@ -37,7 +37,7 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
   };
 
   return (
-    <div className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} w-80 resize-x overflow-x-hidden`}>      <aside className={`h-full w-80 border-r flex flex-col shadow-2xl backdrop-blur-xl transition-colors duration-500 ease-in-out ${isDarkMode ? 'bg-zinc-900/95 border-zinc-800' : 'bg-white/90 border-gray-200'}`}>
+    <div className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} w-80 min-w-[200px]`}>      <aside className={`h-full w-80 border-r flex flex-col shadow-2xl backdrop-blur-xl transition-colors duration-500 ease-in-out ${isDarkMode ? 'bg-zinc-900/95 border-zinc-800' : 'bg-white/90 border-gray-200'}`}>
         <div className={`p-3 border-b transition-colors duration-500 ${isDarkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
         <div className="flex justify-between items-start">
             <div>
