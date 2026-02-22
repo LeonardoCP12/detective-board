@@ -10,7 +10,7 @@ const useFirestore = () => {
   const saveBoard = useCallback(async (boardId, boardData) => {
     if (!currentUser || !boardId) return;
     try {
-      console.log(`[NUBE] Guardando tablero ${boardId} en Firestore...`);
+      console.log(`[NUBE] ☁️ Intentando guardar tablero ${boardId}...`);
       const boardRef = doc(db, 'users', currentUser.uid, 'boards', boardId);
       // Convertir a objeto plano para evitar errores de "undefined" en Firestore
       const cleanData = JSON.parse(JSON.stringify(boardData));
@@ -19,8 +19,9 @@ const useFirestore = () => {
         updatedAt: serverTimestamp(),
         ownerId: currentUser.uid 
       }, { merge: true });
+      console.log(`[NUBE] ✅ Guardado exitoso. Deberías ver la colección 'users' -> '${currentUser.uid}' en Firestore.`);
     } catch (e) {
-      console.error("Error al guardar en Firestore:", e);
+      console.error("❌ ERROR CRÍTICO al guardar en Firestore (Revisa Reglas o Conexión):", e);
     }
   }, [currentUser]);
 
