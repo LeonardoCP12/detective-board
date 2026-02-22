@@ -69,6 +69,7 @@ const Board = () => {
   const [retryTrigger, setRetryTrigger] = useState(0); // Disparador para reintentar
   const [isBoardsSynced, setIsBoardsSynced] = useState(false); // Nuevo estado para controlar la sincronización inicial
   const boardDataLoadedRef = useRef(false); // Referencia para saber si ya cargamos datos válidos
+  const lastSavedDataRef = useRef(null); // Referencia para evitar guardados redundantes (bucle infinito)
   
   // --- FIRESTORE HOOK (CONEXIÓN A LA NUBE) ---
   const { saveBoard, loadBoard, getBoards } = useFirestore();
@@ -155,6 +156,7 @@ const Board = () => {
         setIsBoardLoading(true);
         setSyncError(null); // Limpiar errores previos
         boardDataLoadedRef.current = false; // Bloquear guardado al empezar a cargar
+        lastSavedDataRef.current = null; // Resetear referencia de guardado
         try {
           const data = await loadBoard(currentBoardId);
           if (data) {
@@ -199,13 +201,25 @@ const Board = () => {
 
     const timer = setTimeout(() => {
       if (currentBoardId) {
-        // Guardar en la nube (Firestore)
-        saveBoard(currentBoardId, {
+        const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
+        
+        const dataToSave = {
           nodes,
           edges,
           bgType,
-          name: boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre'
-        });
+          name: boardName
+        };
+
+        // Evitar bucle infinito: Solo guardar si el contenido ha cambiado realmente
+        const dataString = JSON.stringify(dataToSave);
+        if (lastSavedDataRef.current === dataString) {
+            return;
+        }
+
+        // Guardar en la nube (Firestore)
+        saveBoard(currentBoardId, dataToSave);
+        
+        lastSavedDataRef.current = dataString;
         setLastSaved(new Date());
       }
     }, 2000); // Guardar cada 2 segundos de inactividad
