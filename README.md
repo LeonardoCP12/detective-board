@@ -2,8 +2,14 @@
 
 Un tablero de investigación digital interactivo para conectar pistas, evidencias y notas, inspirado en las películas de detectives y thrillers.
 
+Construido con React, React Flow, Firebase, Tailwind CSS y Lucide React.
+
 ## 🌟 Características Principales
 
+*   **🌎 Acceso en todo lugar:** Tus tableros te siguen a cualquier navegador (Chrome, Firefox, etc).
+*   **🛡️ Seguridad en la nube:** Google Firebase protege tus casos.
+*   **✨ Modo Sin Conexión:** Trabaja incluso sin internet.
+*   **🧰 Guardado Automático:** No pierdas ni una pista (cada 5 minutos).
 *   **🔒 Privacidad Total (Local):** Funciona como una "cuenta por dispositivo". Los datos se guardan en el `localStorage` del navegador. Nada se sube a la nube.
 *   **🧩 Gestión de Evidencias:**
     *   **Notas:** Post-its para ideas rápidas.
@@ -22,18 +28,3 @@ Un tablero de investigación digital interactivo para conectar pistas, evidencia
 3.  **Conectar:** Arrastra desde los puntos (handles) de un nodo hacia otro.
 4.  **Editar:** Haz doble clic en cualquier elemento o hilo para editarlo.
 5.  **Atajos:** Pulsa `?` para ver la lista de atajos de teclado (como `Ctrl+L` para bloquear).
-
-## 🛠️ Instalación Local (Desarrollo)
-
-Si quieres modificar el código:
-
-```bash
-# 1. Clonar el repositorio
-git clone https://github.com/LeonardoCP12/detective-board.git
-
-# 2. Instalar dependencias
-npm install
-
-# 3. Iniciar servidor
-npm run dev
-```
