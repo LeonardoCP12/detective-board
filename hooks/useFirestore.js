@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { db } from '../firebase';
 import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, serverTimestamp } from 'firebase/firestore';
-import { useAuth } from '../AuthContext';
+import { useAuth } from '../contexts/AuthContext';
 
 const useFirestore = () => {
   const { currentUser } = useAuth();
