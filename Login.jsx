@@ -13,7 +13,8 @@ const Login = ({ onSwitchToSignUp, onForgotPassword }) => {
     try {
       await signInWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      setError('Error al iniciar sesión. Verifica tus credenciales.');
+      console.error(err);
+      setError('Error: ' + err.message);
     }
   };
 
@@ -22,7 +23,8 @@ const Login = ({ onSwitchToSignUp, onForgotPassword }) => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      setError('Error al iniciar sesión con Google.');
+      console.error(err);
+      setError('Error Google: ' + err.message);
     }
   };
 

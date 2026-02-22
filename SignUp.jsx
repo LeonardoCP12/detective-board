@@ -17,7 +17,14 @@ const SignUp = ({ onSwitchToLogin }) => {
     try {
       await createUserWithEmailAndPassword(auth, email, password);
     } catch (err) {
-      setError(err.code === 'auth/email-already-in-use' ? 'Este correo ya está en uso.' : 'Error al crear la cuenta.');
+      console.error(err);
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este correo ya está en uso.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('La contraseña es muy débil (mínimo 6 caracteres).');
+      } else {
+        setError('Error: ' + err.message);
+      }
     }
   };
 
