@@ -37,7 +37,7 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
   };
 
   return (
-    <div className={`absolute top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
+    <div className={`fixed top-0 left-0 h-full z-50 transition-transform duration-300 ease-in-out ${isOpen ? 'translate-x-0' : '-translate-x-full'} w-80 md:relative md:translate-x-0`}>
       <aside className={`h-full w-80 border-r flex flex-col shadow-2xl backdrop-blur-xl transition-colors duration-500 ease-in-out ${isDarkMode ? 'bg-zinc-900/95 border-zinc-800' : 'bg-white/90 border-gray-200'}`}>
       <div className={`p-3 border-b transition-colors duration-500 ${isDarkMode ? 'border-zinc-800' : 'border-gray-200'}`}>
         <div className="flex justify-between items-start">
@@ -70,7 +70,7 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
       </div>
 
       {/* Barra de Búsqueda */}
-      <div className={`px-3 pt-2 pb-1`}>
+      <div className="px-3 pt-2 pb-1">
         <div className={`flex items-center px-2 py-1.5 rounded border transition-colors duration-500 ${isDarkMode ? 'bg-zinc-950 border-zinc-800' : 'bg-white border-gray-300'}`}>
           <Search size={12} className="text-zinc-500 mr-2" />
           <input type="text" name="search" placeholder="Buscar pistas..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className={`bg-transparent w-full text-xs outline-none font-mono ${isDarkMode ? 'text-zinc-300 placeholder-zinc-600' : 'text-zinc-700 placeholder-zinc-400'}`} />
@@ -214,7 +214,7 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
     </aside>
 
     <button
-        onClick={onToggle}
+        onClick={onToggle} 
         className={`absolute top-6 -right-8 p-1.5 rounded-r-md shadow-md border-y border-r cursor-pointer flex items-center justify-center transition-colors duration-500 ${isDarkMode ? 'bg-zinc-900 border-zinc-800 text-zinc-400 hover:text-white' : 'bg-white border-gray-200 text-zinc-600 hover:text-black'}`}
         title={isOpen ? "Ocultar barra lateral" : "Mostrar barra lateral"}
       >
@@ -256,5 +256,9 @@ const DraggableItem = ({ onDragStart, type, category, icon: Icon, label, color, 
     <span className={`${compact ? 'text-[10px]' : 'text-sm'} font-bold font-mono ${isDarkMode ? 'text-zinc-300' : 'text-zinc-700'}`}>{label}</span>
   </div>
 );
+
+
+
+
 
 export default Sidebar;

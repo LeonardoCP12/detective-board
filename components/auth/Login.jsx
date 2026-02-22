@@ -3,17 +3,31 @@ import { signInWithEmailAndPassword, signInWithPopup } from 'firebase/auth';
 import { auth, googleProvider } from '../../firebase';
 import { Mail, Lock } from 'lucide-react';
 
+
 const Login = ({ onSwitchToSignUp, onForgotPassword, isDarkMode }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
 
   const handleLogin = async (e) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      setError('Por favor, introduce un correo electrónico válido.');
+      return;
+    }
     e.preventDefault();
     setError('');
     try {
       await signInWithEmailAndPassword(auth, email, password);
+      const user = auth.currentUser;
+      if (!user.emailVerified) {
+        setError('Por favor, verifica tu correo electrónico antes de iniciar sesión.');
+        await auth.signOut(); // Cerrar sesión si no está verificado
+        return;
+      }
     } catch (err) {
+
+
       console.error(err);
       setError('Error: ' + err.message);
     }
@@ -32,6 +46,7 @@ const Login = ({ onSwitchToSignUp, onForgotPassword, isDarkMode }) => {
       }
     }
   };
+
 
   return (
     <div className="w-full max-w-xs mx-auto">

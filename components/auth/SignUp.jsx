@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
+import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } from 'firebase/auth';
 import { auth } from '../../firebase';
 import { Mail, Lock, User } from 'lucide-react';
 
@@ -11,6 +11,20 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [error, setError] = useState('');
 
   const handleSignUp = async (e) => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return setError('Por favor, introduce un correo electrónico válido.');
+    }
+
+    // Validar correo temporal con MailCheck.ai
+    const mailcheckUrl = `https://api.mailcheck.ai/email/${email}`;
+    const mailcheckResponse = await fetch(mailcheckUrl);
+    const mailcheckData = await mailcheckResponse.json();
+
+    if (mailcheckData.disposable) {
+      return setError('No se permiten correos temporales.');
+    }
+
     e.preventDefault();
     if (password !== confirmPassword) {
       return setError('Las contraseñas no coinciden.');
@@ -22,6 +36,11 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
       await updateProfile(userCredential.user, {
         displayName: name
       });
+
+      // Enviar correo de verificación
+      await sendEmailVerification(userCredential.user);
+      alert('¡Te hemos enviado un correo para verificar tu dirección! Por favor, verifica antes de iniciar sesión.');
+
     } catch (err) {
       console.error(err);
       if (err.code === 'auth/email-already-in-use') {
