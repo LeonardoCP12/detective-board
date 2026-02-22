@@ -30,6 +30,9 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
 
     // Whitelist primero (defensa principal)
     const domain = email.split('@')[1]?.toLowerCase();
+    console.log('Dominio detectado:', domain);
+    console.log('Está en whitelist:', allowedDomains.includes(domain));
+
     if (!allowedDomains.includes(domain)) {
       return setError('Por favor, usa un correo de un proveedor reconocido (Gmail, Outlook, etc.).');
     }
