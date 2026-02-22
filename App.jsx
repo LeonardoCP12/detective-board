@@ -210,6 +210,8 @@ const Board = () => {
     };
     fetchBoard();
   }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType, isBoardsSynced, boards, retryTrigger]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType, isBoardsSynced, retryTrigger]);
 
   // --- FUNCIÓN DE GUARDADO MANUAL/PERIÓDICO ---
   const saveCurrentBoard = React.useCallback(async (force = false) => {

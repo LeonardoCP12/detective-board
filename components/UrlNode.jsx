@@ -33,7 +33,7 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
         }
 
         if (videoId) {
-          return `https://www.youtube-nocookie.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3&controls=1&playsinline=1&loop=1&playlist=${videoId}`;
+          return `https://www.youtube.com/embed/${videoId}?rel=0&modestbranding=1&iv_load_policy=3&controls=1&playsinline=1&loop=1&playlist=${videoId}`;
         }
       }
     } catch (e) {
