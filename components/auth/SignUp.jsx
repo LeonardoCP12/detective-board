@@ -13,55 +13,55 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e) => {
-    e.preventDefault();
-    setError('');
-    setSuccess('');
+      e.preventDefault();
+      setError('');
+      setSuccess('');
 
-    // Validar formato
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return setError('Por favor, introduce un correo electrónico válido.');
-    }
+      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+      if (!emailRegex.test(email)) {
+        return setError('Por favor, introduce un correo electrónico válido.');
+      }
 
-    // Validar contraseñas
-    if (password !== confirmPassword) {
-      return setError('Las contraseñas no coinciden.');
-    }
+      if (password !== confirmPassword) {
+        return setError('Las contraseñas no coinciden.');
+      }
 
-    setLoading(true);
+      setLoading(true); // <-- AQUÍ, antes de todo lo async
 
-    // Validar correo temporal con MailCheck.ai
-    try {
-      const mailcheckResponse = await fetch(`https://api.mailcheck.ai/email/${encodeURIComponent(email)}`);
-      const mailcheckData = await mailcheckResponse.json();
-      if (mailcheckData.disposable === true) {
+      try {
+        const mailcheckResponse = await fetch(`https://api.mailcheck.ai/email/${encodeURIComponent(email)}`);
+        const mailcheckData = await mailcheckResponse.json();
+        if (mailcheckData.disposable === true) {
+          setLoading(false);
+          return setError('No se permiten correos temporales.');
+        }
+      } catch (err) {
+        const allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'protonmail.com'];
+        const domain = email.split('@')[1];
+        if (!allowedDomains.includes(domain)) {
+          setLoading(false);
+          return setError('Por favor, usa un correo de un proveedor reconocido (Gmail, Outlook, etc.).');
+        }
+      }
+
+      try {
+        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+        await updateProfile(userCredential.user, { displayName: name });
+        await sendEmailVerification(userCredential.user);
+        await auth.signOut();
+        setSuccess('¡Cuenta creada! Te enviamos un correo de verificación. Revísalo antes de iniciar sesión.');
+      } catch (err) {
+        if (err.code === 'auth/email-already-in-use') {
+          setError('Este correo ya está en uso.');
+        } else if (err.code === 'auth/weak-password') {
+          setError('La contraseña es muy débil (mínimo 6 caracteres).');
+        } else {
+          setError('Error: ' + err.message);
+        }
+      } finally {
         setLoading(false);
-        return setError('No se permiten correos temporales.');
       }
-    } catch (err) {
-      console.error("Error al validar con MailCheck.ai:", err);
-      // Si falla la API, continuamos igual
-    }
-
-    try {
-      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-      await updateProfile(userCredential.user, { displayName: name });
-      await sendEmailVerification(userCredential.user);
-      await auth.signOut();
-      setSuccess('¡Cuenta creada! Te enviamos un correo de verificación. Revísalo antes de iniciar sesión.');
-    } catch (err) {
-      console.error(err);
-      if (err.code === 'auth/email-already-in-use') {
-        setError('Este correo ya está en uso.');
-      } else if (err.code === 'auth/weak-password') {
-        setError('La contraseña es muy débil (mínimo 6 caracteres).');
-      } else {
-        setError('Error: ' + err.message);
-      }
-    } finally {
-      setLoading(false);
-    }
-  };
+    };
 
   return (
     <div className="w-full max-w-xs mx-auto">

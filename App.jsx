@@ -696,7 +696,7 @@ const App = () => {
 
   // Si hay un usuario logueado, muestra el tablero.
   // Si no, muestra la página de autenticación.
-  return currentUser ? <Board /> : <AuthPage />;
+  return (currentUser && currentUser.emailVerified) ? <Board /> : <AuthPage />;
 }
 
 export default App;
