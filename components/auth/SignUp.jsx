@@ -3,7 +3,7 @@ import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } 
 import { auth } from '../../firebase';
 import { Mail, Lock, User } from 'lucide-react';
 
-const allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'protonmail.com', 'msn.com'];
+const allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'protonmail.com', 'msn.com','uni.pe'];
 
 const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [name, setName] = useState('');
@@ -30,8 +30,8 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
 
     // Whitelist primero (defensa principal)
     const domain = email.split('@')[1]?.toLowerCase();
-    console.log('Dominio detectado:', domain);
-    console.log('Está en whitelist:', allowedDomains.includes(domain));
+    // console.log('Dominio detectado:', domain);
+    // console.log('Está en whitelist:', allowedDomains.includes(domain));
 
     if (!allowedDomains.includes(domain)) {
       return setError('Por favor, usa un correo de un proveedor reconocido (Gmail, Outlook, etc.).');
@@ -72,8 +72,8 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
 
   return (
     <div className="w-full max-w-xs mx-auto">
-      <form onSubmit={handleSignUp} className={`shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4 border transition-colors duration-300 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'}`}>
-        <h2 className={`text-2xl font-bold mb-6 text-center font-mono ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CREAR CUENTA</h2>
+      <form onSubmit={handleSignUp} className={`shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4 border transition-colors duration-300 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'} `}>
+        <h2 className={`text-2xl font-bold mt-4 mb-6 text-center font-mono ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CREAR CUENTA</h2>
         {error && <p className="bg-red-900/50 text-red-300 text-xs p-3 rounded mb-4">{error}</p>}
         {success && <p className="bg-green-900/50 text-green-300 text-xs p-3 rounded mb-4">{success}</p>}
         <div className="mb-4">

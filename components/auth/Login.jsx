@@ -49,9 +49,9 @@ const Login = ({ onSwitchToSignUp, onForgotPassword, isDarkMode }) => {
 
 
   return (
-    <div className="w-full max-w-xs mx-auto">
+    <div className="w-full max-w-xs mx-auto ">
       <form onSubmit={handleLogin} className={`shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4 border transition-colors duration-300 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'}`}>
-        <h2 className={`text-2xl font-bold mb-6 text-center font-mono ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>INICIAR SESIÓN</h2>
+        <h2 className={`text-2xl font-bold mt-4 mb-6 text-center font-mono ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>INICIAR SESIÓN</h2>
         {error && <p className="bg-red-900/50 text-red-300 text-xs p-3 rounded mb-4">{error}</p>}
         <div className="mb-4">
           <label className={`block text-sm font-bold mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`} htmlFor="login-email">Correo</label>
