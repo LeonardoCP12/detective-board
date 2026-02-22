@@ -67,6 +67,7 @@ const Board = () => {
   const [isBoardLoading, setIsBoardLoading] = useState(false);
   const [syncError, setSyncError] = useState(null); // Nuevo estado para errores de conexión
   const [retryTrigger, setRetryTrigger] = useState(0); // Disparador para reintentar
+  const [isSaving, setIsSaving] = useState(false); // Estado para el indicador "Guardando..."
   const [isBoardsSynced, setIsBoardsSynced] = useState(false); // Nuevo estado para controlar la sincronización inicial
   const boardDataLoadedRef = useRef(false); // Referencia para saber si ya cargamos datos válidos
   const lastSavedDataRef = useRef(null); // Referencia para evitar guardados redundantes (bucle infinito)
@@ -156,6 +157,7 @@ const Board = () => {
         setIsBoardLoading(true);
         setSyncError(null); // Limpiar errores previos
         boardDataLoadedRef.current = false; // Bloquear guardado al empezar a cargar
+        
         try {
           const data = await loadBoard(currentBoardId);
           if (data) {
@@ -229,11 +231,13 @@ const Board = () => {
       // Solo guardar si hay cambios reales respecto a lo último guardado
       if (!force && lastSavedDataRef.current === dataString) return;
 
+      setIsSaving(true);
       try {
           await saveBoard(currentBoardId, dataToSave);
           lastSavedDataRef.current = dataString;
           setLastSaved(new Date());
           console.log("Guardado automático completado.");
+          setIsSaving(false);
       } catch (error) {
           console.error("Error al guardar:", error);
       }
