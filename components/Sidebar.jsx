@@ -257,8 +257,4 @@ const DraggableItem = ({ onDragStart, type, category, icon: Icon, label, color, 
   </div>
 );
 
-
-
-
-
 export default Sidebar;
