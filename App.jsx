@@ -32,8 +32,13 @@ import useSearchSystem from './hooks/useSearchSystem';
 import useEditorSettings from './hooks/useEditorSettings';
 import useGraphOperations from './hooks/useGraphOperations';
 import { getBoardData } from './utils/storageUtils';
+import { useAuth } from './contexts/AuthContext';
+import AuthPage from './pages/AuthPage';
+import useFirestore from './hooks/useFirestore';
+import { signOut } from 'firebase/auth';
+import { auth } from './firebase';
 
-const InvestigationBoard = () => {
+const Board = () => {
   const reactFlowWrapper = useRef(null);
 
   // --- EFECTO PARA TÍTULO Y FAVICON ---
@@ -54,11 +59,12 @@ const InvestigationBoard = () => {
   const [caseManagerOpen, setCaseManagerOpen] = useState(false);
   
   // Estado temporal para inicializar ReactFlow (se gestionará dentro de useBoardManagement)
-  const currentBoardIdRef = useRef(localStorage.getItem('detective-current-board-id') || 'default-case');
+  // const currentBoardIdRef = useRef(localStorage.getItem('detective-current-board-id') || 'default-case');
+  // AHORA USAMOS FIRESTORE, INICIALIZAMOS VACÍO
 
   // Inicializar estado de ReactFlow con el tablero actual
-  const [nodes, setNodes, onNodesChange] = useNodesState(getBoardData(currentBoardIdRef.current).nodes);
-  const [edges, setEdges, onEdgesChange] = useEdgesState(getBoardData(currentBoardIdRef.current).edges);
+  const [nodes, setNodes, onNodesChange] = useNodesState([]);
+  const [edges, setEdges, onEdgesChange] = useEdgesState([]);
 
   const [reactFlowInstance, setReactFlowInstance] = useState(null);
   const [editModalOpen, setEditModalOpen] = useState(false);
@@ -70,6 +76,9 @@ const InvestigationBoard = () => {
   const [inputModalOpen, setInputModalOpen] = useState(false);
   const [editingEdge, setEditingEdge] = useState(null);
   const [pendingStampNodeId, setPendingStampNodeId] = useState(null);
+  
+  // --- FIRESTORE HOOK ---
+  const { saveBoard, loadBoard } = useFirestore();
 
   // --- CONFIGURACIÓN DEL EDITOR (HOOK) ---
   const {
@@ -82,7 +91,7 @@ const InvestigationBoard = () => {
     isZenMode, setIsZenMode,
     bgType, setBgType,
     toggleBackground
-  } = useEditorSettings(getBoardData(currentBoardIdRef.current).bgType);
+  } = useEditorSettings('cork'); // Valor por defecto
 
   // --- CONFIGURACIÓN DE FLUJO (HOOK) ---
   const { nodeTypes, edgeTypes, proOptions, connectionLineStyle, nodeColor } = useFlowConfiguration({ isDarkMode, connectionColor });
@@ -108,7 +117,39 @@ const InvestigationBoard = () => {
   } = useBoardManagement({ nodes, edges, bgType, setNodes, setEdges, setBgType, reactFlowInstance, clearHistory, setCaseManagerOpen, setConfirmModal, lastSaved });
 
   // --- PERSISTENCIA Y SEGURIDAD ---
-  useAutoSave({ nodes, edges, bgType, currentBoardId, setLastSaved });
+  // useAutoSave({ nodes, edges, bgType, currentBoardId, setLastSaved }); 
+  // REEMPLAZADO POR FIRESTORE AUTO-SAVE
+
+  // Efecto para cargar datos iniciales desde Firestore
+  useEffect(() => {
+    const fetchBoard = async () => {
+      if (currentBoardId) {
+        const data = await loadBoard(currentBoardId);
+        if (data) {
+          setNodes(data.nodes || []);
+          setEdges(data.edges || []);
+          if (data.bgType) setBgType(data.bgType);
+        }
+      }
+    };
+    fetchBoard();
+  }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType]);
+
+  // Efecto para guardar automáticamente en Firestore (Debounce)
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (currentBoardId && (nodes.length > 0 || edges.length > 0)) {
+        saveBoard(currentBoardId, {
+          nodes,
+          edges,
+          bgType,
+          name: boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre'
+        });
+        setLastSaved(new Date());
+      }
+    }, 2000); // Guardar cada 2 segundos de inactividad
+    return () => clearTimeout(timer);
+  }, [nodes, edges, bgType, currentBoardId, saveBoard, boards]);
 
   // Confirmación al cerrar la pestaña
   useEffect(() => {
@@ -281,6 +322,14 @@ const InvestigationBoard = () => {
 
   const currentBoard = boards.find(b => b.id === currentBoardId);
 
+  const handleLogout = async () => {
+    try {
+      await signOut(auth);
+    } catch (error) {
+      console.error("Error al cerrar sesión", error);
+    }
+  };
+
   return (
     <div className={`flex h-screen w-screen transition-colors duration-500 ease-in-out ${isDarkMode ? 'bg-[#1a1a1a]' : 'bg-gray-50 light-mode'}`}>
       <ThemeContext.Provider value={isDarkMode}>
@@ -308,6 +357,7 @@ const InvestigationBoard = () => {
           onNextMatch={() => navigateSearch('next')}
           onPrevMatch={() => navigateSearch('prev')}
           onToggleBg={toggleBackground}
+          onLogout={handleLogout}
         />}
         
         <div 
@@ -490,4 +540,12 @@ const InvestigationBoard = () => {
   );
 };
 
-export default InvestigationBoard;
+const App = () => {
+  const { currentUser } = useAuth();
+
+  // Si hay un usuario logueado, muestra el tablero.
+  // Si no, muestra la página de autenticación.
+  return currentUser ? <Board /> : <AuthPage />;
+}
+
+export default App;
