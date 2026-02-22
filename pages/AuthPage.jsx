@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
-import Login from './components/auth/Login';
-import SignUp from './components/auth/SignUp';
-import ForgotPassword from './components/auth/ForgotPassword';
+import Login from '../components/auth/Login';
+import SignUp from '../components/auth/SignUp';
+import ForgotPassword from '../components/auth/ForgotPassword';
 import { Sun, Moon } from 'lucide-react';
 
 const AuthPage = () => {
