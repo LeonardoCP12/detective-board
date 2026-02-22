@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { createUserWithEmailAndPassword, updateProfile } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth } from '../../firebase';
 import { Mail, Lock, User } from 'lucide-react';
 
 const SignUp = ({ onSwitchToLogin, isDarkMode }) => {

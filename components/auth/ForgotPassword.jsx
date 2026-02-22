@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { sendPasswordResetEmail } from 'firebase/auth';
-import { auth } from './firebase';
+import { auth } from '../../firebase';
 import { Mail } from 'lucide-react';
 
 const ForgotPassword = ({ onSwitchToLogin, isDarkMode }) => {
