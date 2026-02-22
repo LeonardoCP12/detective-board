@@ -3,6 +3,8 @@ import { createUserWithEmailAndPassword, updateProfile, sendEmailVerification } 
 import { auth } from '../../firebase';
 import { Mail, Lock, User } from 'lucide-react';
 
+const allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'protonmail.com', 'msn.com'];
+
 const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -13,55 +15,57 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [loading, setLoading] = useState(false);
 
   const handleSignUp = async (e) => {
-      e.preventDefault();
-      setError('');
-      setSuccess('');
+    e.preventDefault();
+    setError('');
+    setSuccess('');
 
-      const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-      if (!emailRegex.test(email)) {
-        return setError('Por favor, introduce un correo electrónico válido.');
-      }
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      return setError('Por favor, introduce un correo electrónico válido.');
+    }
 
-      if (password !== confirmPassword) {
-        return setError('Las contraseñas no coinciden.');
-      }
+    if (password !== confirmPassword) {
+      return setError('Las contraseñas no coinciden.');
+    }
 
-      setLoading(true); // <-- AQUÍ, antes de todo lo async
+    // Whitelist primero (defensa principal)
+    const domain = email.split('@')[1]?.toLowerCase();
+    if (!allowedDomains.includes(domain)) {
+      return setError('Por favor, usa un correo de un proveedor reconocido (Gmail, Outlook, etc.).');
+    }
 
-      try {
-        const mailcheckResponse = await fetch(`https://api.mailcheck.ai/email/${encodeURIComponent(email)}`);
-        const mailcheckData = await mailcheckResponse.json();
-        if (mailcheckData.disposable === true) {
-          setLoading(false);
-          return setError('No se permiten correos temporales.');
-        }
-      } catch (err) {
-        const allowedDomains = ['gmail.com', 'outlook.com', 'hotmail.com', 'yahoo.com', 'icloud.com', 'live.com', 'protonmail.com'];
-        const domain = email.split('@')[1];
-        if (!allowedDomains.includes(domain)) {
-          setLoading(false);
-          return setError('Por favor, usa un correo de un proveedor reconocido (Gmail, Outlook, etc.).');
-        }
-      }
+    setLoading(true);
 
-      try {
-        const userCredential = await createUserWithEmailAndPassword(auth, email, password);
-        await updateProfile(userCredential.user, { displayName: name });
-        await sendEmailVerification(userCredential.user);
-        await auth.signOut();
-        setSuccess('¡Cuenta creada! Te enviamos un correo de verificación. Revísalo antes de iniciar sesión.');
-      } catch (err) {
-        if (err.code === 'auth/email-already-in-use') {
-          setError('Este correo ya está en uso.');
-        } else if (err.code === 'auth/weak-password') {
-          setError('La contraseña es muy débil (mínimo 6 caracteres).');
-        } else {
-          setError('Error: ' + err.message);
-        }
-      } finally {
+    // MailCheck como validación adicional
+    try {
+      const mailcheckResponse = await fetch(`https://api.mailcheck.ai/email/${encodeURIComponent(email)}`);
+      const mailcheckData = await mailcheckResponse.json();
+      if (mailcheckData.disposable === true) {
         setLoading(false);
+        return setError('No se permiten correos temporales.');
       }
-    };
+    } catch (err) {
+      console.warn("MailCheck no disponible, continuando con whitelist.");
+    }
+
+    try {
+      const userCredential = await createUserWithEmailAndPassword(auth, email, password);
+      await updateProfile(userCredential.user, { displayName: name });
+      await sendEmailVerification(userCredential.user);
+      await auth.signOut();
+      setSuccess('¡Cuenta creada! Te enviamos un correo de verificación. Revísalo antes de iniciar sesión.');
+    } catch (err) {
+      if (err.code === 'auth/email-already-in-use') {
+        setError('Este correo ya está en uso.');
+      } else if (err.code === 'auth/weak-password') {
+        setError('La contraseña es muy débil (mínimo 6 caracteres).');
+      } else {
+        setError('Error: ' + err.message);
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
 
   return (
     <div className="w-full max-w-xs mx-auto">
