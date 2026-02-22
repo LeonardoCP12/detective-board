@@ -1,6 +1,6 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
-import { getFirestore } from "firebase/firestore";
+import { getFirestore, enableIndexedDbPersistence } from "firebase/firestore";
 import { getAnalytics } from "firebase/analytics";
 
 // Configuración de tu proyecto Firebase
@@ -20,5 +20,15 @@ const analytics = getAnalytics(app);
 
 export const auth = getAuth(app);
 export const db = getFirestore(app);
+
+// Habilitar persistencia sin conexión (Evita el error "client is offline")
+enableIndexedDbPersistence(db).catch((err) => {
+  if (err.code == 'failed-precondition') {
+      console.warn('Persistencia fallida: Múltiples pestañas abiertas.');
+  } else if (err.code == 'unimplemented') {
+      console.warn('Persistencia no soportada por el navegador.');
+  }
+});
+
 export const googleProvider = new GoogleAuthProvider();
 export { analytics };

@@ -35,7 +35,7 @@ const useFirestore = () => {
       return null;
     } catch (e) {
       console.error("Error al cargar de Firestore:", e);
-      return null;
+      throw e; // IMPORTANTE: Lanzar error para detener el auto-guardado en App.jsx
     }
   }, [currentUser]);
 
@@ -49,7 +49,7 @@ const useFirestore = () => {
           return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
       } catch (e) {
           console.error("Error al obtener tableros:", e);
-          return [];
+          throw e; // IMPORTANTE: Lanzar error para saber que falló la conexión
       }
   }, [currentUser]);
 
