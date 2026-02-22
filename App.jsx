@@ -32,9 +32,9 @@ import useSearchSystem from './hooks/useSearchSystem';
 import useEditorSettings from './hooks/useEditorSettings';
 import useGraphOperations from './hooks/useGraphOperations';
 import { getBoardData } from './utils/storageUtils';
-import { useAuth } from './contexts/AuthContext';
-import AuthPage from './pages/AuthPage';
-import useFirestore from './hooks/useFirestore';
+import { useAuth } from './AuthContext';
+import AuthPage from './AuthPage';
+import useFirestore from './useFirestore';
 import { signOut } from 'firebase/auth';
 import { auth } from './firebase';
 
