@@ -4,16 +4,19 @@ import { auth } from '../../firebase';
 import axios from 'axios';
 import { Mail, Lock, User } from 'lucide-react';
 
+
 const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
 
   const handleSignUp = async (e) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    e.preventDefault();
+     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(email)) {
       return setError('Por favor, introduce un correo electrónico válido.');
     }
@@ -58,7 +61,7 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
 
       // Enviar correo de verificación
       await sendEmailVerification(userCredential.user);
-      await auth.signOut(); // Cerrar sesión inmediatamente después del registro
+      await auth.signOut();
       alert('¡Te hemos enviado un correo para verificar tu dirección! Por favor, verifica antes de iniciar sesión.');
 
     } catch (err) {
@@ -78,7 +81,8 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
     <div className="w-full max-w-xs mx-auto">
       <form onSubmit={handleSignUp} className={`shadow-xl rounded-lg px-8 pt-6 pb-8 mb-4 border transition-colors duration-300 ${isDarkMode ? 'bg-zinc-800 border-zinc-700' : 'bg-white border-gray-200'}`}>
         <h2 className={`text-2xl font-bold mb-6 text-center font-mono ${isDarkMode ? 'text-white' : 'text-gray-800'}`}>CREAR CUENTA</h2>
-        {error && <p className="bg-red-900/50 text-red-300 text-xs p-3 rounded mb-4">{error}</p>}
+         {error && <p className="bg-red-900/50 text-red-300 text-xs p-3 rounded mb-4">{error}</p>}
+         {success && <p className="bg-green-900/50 text-green-300 text-xs p-3 rounded mb-4">{success}</p>}
         <div className="mb-4">
           <label className={`block text-sm font-bold mb-2 ${isDarkMode ? 'text-zinc-400' : 'text-gray-600'}`} htmlFor="signup-name">Nombre</label>
           <div className="relative">
