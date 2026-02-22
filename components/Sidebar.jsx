@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { User, MapPin, FileText, Calendar, StickyNote, Image as ImageIcon, Type, Sun, Moon, Search, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronsUp, ChevronsDown, FolderOpen, Minus, Activity, CornerDownRight, Save, Upload, Download, Trash2, Fingerprint, Layers, Maximize, BoxSelect, CheckCircle, XCircle, Star, AlertTriangle, Eye, Skull, Lock, PenTool, ArrowUp, ArrowDown, Palette, Link } from 'lucide-react';
+import { User, MapPin, FileText, Calendar, StickyNote, Image as ImageIcon, Type, Sun, Moon, Search, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronsUp, ChevronsDown, FolderOpen, Minus, Activity, CornerDownRight, Save, Upload, Download, Trash2, Fingerprint, Layers, Maximize, BoxSelect, CheckCircle, XCircle, Star, AlertTriangle, Eye, Skull, Lock, PenTool, ArrowUp, ArrowDown, Palette, Link, LogOut } from 'lucide-react';
 
-const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, connectionLineType, setConnectionLineType, lastSaved, onSave, onLoad, onClear, onHelp, isDarkMode, toggleTheme, searchTerm, setSearchTerm, onExport, isOpen, onToggle, onOpenCaseManager, currentBoardName, onToggleZen, onNextMatch, onPrevMatch, onToggleBg }) => {
+const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, connectionLineType, setConnectionLineType, lastSaved, onSave, onLoad, onClear, onHelp, isDarkMode, toggleTheme, searchTerm, setSearchTerm, onExport, isOpen, onToggle, onOpenCaseManager, currentBoardName, onToggleZen, onNextMatch, onPrevMatch, onToggleBg, onLogout }) => {
   const fileInputRef = useRef(null);
   const [sectionsState, setSectionsState] = useState(() => {
     try {
@@ -199,6 +199,13 @@ const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, c
         {lastSaved && (
             <div className={`text-[10px] text-center mt-2 font-mono ${isDarkMode ? 'text-zinc-600' : 'text-gray-400'}`}>Guardado: {lastSaved.toLocaleTimeString()}</div>
         )}
+
+        <button 
+            onClick={onLogout}
+            className={`w-full py-2 border transition-colors text-[10px] uppercase font-bold rounded flex items-center justify-center gap-2 mt-2 ${isDarkMode ? 'bg-red-950/50 text-red-500 border-red-900/30 hover:bg-red-900/40' : 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'}`}
+        >
+            <LogOut size={14} /> Cerrar Sesión
+        </button>
       </div>
     </aside>
 
