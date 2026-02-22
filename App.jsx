@@ -9,6 +9,7 @@ import ReactFlow, {
 } from 'reactflow';
 import 'reactflow/dist/style.css';
 import './index.css';
+import { WifiOff, RefreshCw } from 'lucide-react';
 
 import Sidebar from './components/Sidebar';
 import EditModal from './components/EditModal';
@@ -69,7 +70,7 @@ const Board = () => {
   const [isBoardsSynced, setIsBoardsSynced] = useState(false); // Nuevo estado para controlar la sincronización inicial
   const boardDataLoadedRef = useRef(false); // Referencia para saber si ya cargamos datos válidos
   
-  // --- FIRESTORE HOOK ---
+  // --- FIRESTORE HOOK (CONEXIÓN A LA NUBE) ---
   const { saveBoard, loadBoard, getBoards } = useFirestore();
 
   // --- CONFIGURACIÓN DEL EDITOR (HOOK) ---
@@ -119,20 +120,18 @@ const Board = () => {
         setIsBoardsSynced(false); // Reiniciar estado al cambiar de usuario
         try {
           const remoteBoards = await getBoards();
-          if (remoteBoards.length > 0) {
-            const formattedBoards = remoteBoards.map(b => ({
-              ...b,
-              createdAt: b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || Date.now()),
-              lastModified: b.updatedAt?.toMillis ? b.updatedAt.toMillis() : (b.updatedAt || Date.now()),
-            })).sort((a, b) => b.lastModified - a.lastModified);
-            
-            setBoards(formattedBoards);
+          
+          const formattedBoards = remoteBoards.map(b => ({
+            ...b,
+            createdAt: b.createdAt?.toMillis ? b.createdAt.toMillis() : (b.createdAt || Date.now()),
+            lastModified: b.updatedAt?.toMillis ? b.updatedAt.toMillis() : (b.updatedAt || Date.now()),
+          })).sort((a, b) => b.lastModified - a.lastModified);
+          
+          setBoards(formattedBoards); // IMPORTANTE: Actualizar siempre, incluso si está vacío, para evitar "tableros fantasma"
 
-            if (!currentBoardId || !formattedBoards.find(b => b.id === currentBoardId)) {
-                setCurrentBoardId(formattedBoards[0].id);
-            }
-          } else {
-            // Si no hay tableros en la nube, mantenemos el estado local o creamos uno por defecto
+          if (formattedBoards.length > 0 && (!currentBoardId || !formattedBoards.find(b => b.id === currentBoardId))) {
+              setCurrentBoardId(formattedBoards[0].id);
+          } else if (formattedBoards.length === 0) {
             console.log("No se encontraron tableros remotos.");
           }
         } catch (error) {
@@ -196,10 +195,11 @@ const Board = () => {
 
   // Efecto para guardar automáticamente en Firestore (Debounce)
   useEffect(() => {
-    if (isBoardLoading || !boardDataLoadedRef.current) return; // PROTECCIÓN CRÍTICA: No guardar si no hemos cargado
+    if (isBoardLoading || !boardDataLoadedRef.current || syncError) return; // PROTECCIÓN CRÍTICA: No guardar si hay error de sincronización
 
     const timer = setTimeout(() => {
       if (currentBoardId) {
+        // Guardar en la nube (Firestore)
         saveBoard(currentBoardId, {
           nodes,
           edges,
@@ -210,7 +210,7 @@ const Board = () => {
       }
     }, 2000); // Guardar cada 2 segundos de inactividad
     return () => clearTimeout(timer);
-  }, [nodes, edges, bgType, currentBoardId, saveBoard, boards, isBoardLoading]);
+  }, [nodes, edges, bgType, currentBoardId, saveBoard, boards, isBoardLoading, syncError]);
 
   // Confirmación al cerrar la pestaña
   useEffect(() => {
@@ -528,6 +528,27 @@ const Board = () => {
                     backgroundColor: 'rgba(59, 130, 246, 0.1)',
                 }}
             />
+          )}
+
+          {/* Error Overlay - Conexión Interrumpida */}
+          {syncError && (
+            <div className="absolute inset-0 z-[60] bg-black/60 flex items-center justify-center backdrop-blur-sm animate-in fade-in duration-300">
+               <div className="bg-zinc-900 p-8 rounded-xl border border-red-500/30 text-center shadow-2xl max-w-md">
+                  <WifiOff size={48} className="mx-auto text-red-500 mb-4 animate-pulse" />
+                  <h2 className="text-xl font-bold text-white mb-2 font-mono tracking-wider">CONEXIÓN INTERRUMPIDA</h2>
+                  <p className="text-zinc-400 mb-6 text-sm">
+                    {syncError === 'offline' 
+                        ? "No se pudo sincronizar con la base de datos. Es posible que un firewall o configuración de red esté bloqueando la conexión." 
+                        : "Hubo un error crítico al cargar el expediente."}
+                  </p>
+                  <button 
+                    onClick={() => setRetryTrigger(prev => prev + 1)}
+                    className="px-6 py-2 bg-red-600 hover:bg-red-700 text-white rounded font-bold uppercase tracking-wider transition-colors flex items-center gap-2 mx-auto shadow-lg"
+                  >
+                    <RefreshCw size={16} /> Reintentar Conexión
+                  </button>
+               </div>
+            </div>
           )}
         </div>
 

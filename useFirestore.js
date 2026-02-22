@@ -10,6 +10,7 @@ const useFirestore = () => {
   const saveBoard = useCallback(async (boardId, boardData) => {
     if (!currentUser || !boardId) return;
     try {
+      console.log(`[NUBE] Guardando tablero ${boardId} en Firestore...`);
       const boardRef = doc(db, 'users', currentUser.uid, 'boards', boardId);
       // Convertir a objeto plano para evitar errores de "undefined" en Firestore
       const cleanData = JSON.parse(JSON.stringify(boardData));
@@ -27,6 +28,7 @@ const useFirestore = () => {
   const loadBoard = useCallback(async (boardId) => {
     if (!currentUser || !boardId) return null;
     try {
+      console.log(`[NUBE] Descargando tablero ${boardId}...`);
       const boardRef = doc(db, 'users', currentUser.uid, 'boards', boardId);
       const docSnap = await getDoc(boardRef);
       if (docSnap.exists()) {
@@ -43,6 +45,7 @@ const useFirestore = () => {
   const getBoards = useCallback(async () => {
       if (!currentUser) return [];
       try {
+          console.log(`[NUBE] Sincronizando lista de casos...`);
           const boardsRef = collection(db, 'users', currentUser.uid, 'boards');
           const q = query(boardsRef);
           const querySnapshot = await getDocs(q);
