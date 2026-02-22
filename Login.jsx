@@ -25,7 +25,11 @@ const Login = ({ onSwitchToSignUp, onForgotPassword, isDarkMode }) => {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
       console.error(err);
-      setError('Error Google: ' + err.message);
+      if (err.code === 'auth/cancelled-popup-request') {
+        setError(''); // Ignorar si el usuario cerró la ventana voluntariamente
+      } else {
+        setError('Error Google: ' + err.message);
+      }
     }
   };
 

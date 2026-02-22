@@ -64,6 +64,7 @@ const Board = () => {
   const [editingEdge, setEditingEdge] = useState(null);
   const [pendingStampNodeId, setPendingStampNodeId] = useState(null);
   const [isBoardLoading, setIsBoardLoading] = useState(false);
+  const [isBoardsSynced, setIsBoardsSynced] = useState(false); // Nuevo estado para controlar la sincronización inicial
   const boardDataLoadedRef = useRef(false); // Referencia para saber si ya cargamos datos válidos
   
   // --- FIRESTORE HOOK ---
@@ -113,6 +114,7 @@ const Board = () => {
   useEffect(() => {
     const syncBoards = async () => {
       if (currentUser) {
+        setIsBoardsSynced(false); // Reiniciar estado al cambiar de usuario
         try {
           const remoteBoards = await getBoards();
           if (remoteBoards.length > 0) {
@@ -129,11 +131,12 @@ const Board = () => {
             }
           } else {
             // Si no hay tableros en la nube, mantenemos el estado local o creamos uno por defecto
-            // Esto es importante para cuentas nuevas
             console.log("No se encontraron tableros remotos.");
           }
         } catch (error) {
           console.error("Error sincronizando tableros:", error);
+        } finally {
+          setIsBoardsSynced(true); // Marcar como sincronizado (éxito o fallo)
         }
       }
     };
@@ -143,6 +146,10 @@ const Board = () => {
   // Efecto para cargar datos iniciales desde Firestore
   useEffect(() => {
     const fetchBoard = async () => {
+      // IMPORTANTE: No intentar cargar nada hasta que la lista de tableros esté sincronizada
+      // Esto evita que IDs obsoletos del localStorage sobrescriban datos reales
+      if (!isBoardsSynced) return;
+
       if (currentBoardId) {
         setIsBoardLoading(true);
         boardDataLoadedRef.current = false; // Bloquear guardado al empezar a cargar
@@ -154,13 +161,25 @@ const Board = () => {
             if (data.bgType) setBgType(data.bgType);
             boardDataLoadedRef.current = true; // Datos cargados, permitir guardado
           } else {
-            // Si el tablero no existe en la nube (es nuevo), permitimos guardar el estado vacío inicial
-            setNodes([]);
-            setEdges([]);
-            boardDataLoadedRef.current = true; 
+            // Si no hay datos, verificamos si el tablero es válido (está en la lista)
+            const isValidBoard = boards.some(b => b.id === currentBoardId);
+            
+            if (isValidBoard) {
+                // Es un tablero válido (nuevo o vacío), inicializamos
+                setNodes([]);
+                setEdges([]);
+                boardDataLoadedRef.current = true; 
+            } else {
+                // Es un ID obsoleto o inválido. NO inicializamos ni permitimos guardar.
+                console.warn("ID de tablero obsoleto detectado, omitiendo carga para evitar sobrescritura.");
+            }
           }
         } catch (error) {
-          console.error("Error cargando tablero:", error);
+          if (error.code === 'unavailable' || error.message?.includes('offline')) {
+             console.warn("Modo offline: No se pudo sincronizar con la nube, usando caché local si existe.");
+          } else {
+             console.error("Error cargando tablero:", error);
+          }
           // NO marcamos boardDataLoadedRef como true, así evitamos sobrescribir con vacío si hubo error de red
         } finally {
           setIsBoardLoading(false);
@@ -168,7 +187,7 @@ const Board = () => {
       }
     };
     fetchBoard();
-  }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType]);
+  }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType, isBoardsSynced, boards]);
 
   // Efecto para guardar automáticamente en Firestore (Debounce)
   useEffect(() => {
@@ -396,7 +415,7 @@ const Board = () => {
           onToggleBg={toggleBackground}
           onLogout={handleLogout}
           currentUser={currentUser}
-          isSyncing={isBoardLoading}
+          isSyncing={isBoardLoading || !isBoardsSynced}
         />}
         
         <div 
