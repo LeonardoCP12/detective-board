@@ -1,7 +1,7 @@
 import React, { useRef, useState, useEffect } from 'react';
-import { User, MapPin, FileText, Calendar, StickyNote, Image as ImageIcon, Type, Sun, Moon, Search, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronsUp, ChevronsDown, FolderOpen, Minus, Activity, CornerDownRight, Save, Upload, Download, Trash2, Fingerprint, Layers, Maximize, BoxSelect, CheckCircle, XCircle, Star, AlertTriangle, Eye, Skull, Lock, PenTool, ArrowUp, ArrowDown, Palette, Link, LogOut, Cloud, CloudOff, Loader2 } from 'lucide-react';
+import { User, MapPin, FileText, Calendar, StickyNote, Image as ImageIcon, Type, Sun, Moon, Search, HelpCircle, ChevronLeft, ChevronRight, ChevronDown, ChevronsUp, ChevronsDown, FolderOpen, Minus, Activity, CornerDownRight, Save, Upload, Download, Trash2, Fingerprint, Layers, Maximize, BoxSelect, CheckCircle, XCircle, Star, AlertTriangle, Eye, Skull, Lock, PenTool, ArrowUp, ArrowDown, Palette, Link, LogOut, Cloud, CloudOff, Loader2, WifiOff, RefreshCw } from 'lucide-react';
 
-const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, connectionLineType, setConnectionLineType, lastSaved, onSave, onLoad, onClear, onHelp, isDarkMode, toggleTheme, searchTerm, setSearchTerm, onExport, isOpen, onToggle, onOpenCaseManager, currentBoardName, onToggleZen, onNextMatch, onPrevMatch, onToggleBg, onLogout, currentUser, isSyncing }) => {
+const Sidebar = ({ connectionColor = '#dc2626', setConnectionColor = () => {}, connectionLineType, setConnectionLineType, lastSaved, onSave, onLoad, onClear, onHelp, isDarkMode, toggleTheme, searchTerm, setSearchTerm, onExport, isOpen, onToggle, onOpenCaseManager, currentBoardName, onToggleZen, onNextMatch, onPrevMatch, onToggleBg, onLogout, currentUser, isSyncing, syncError, onRetry }) => {
   const fileInputRef = useRef(null);
   const [sectionsState, setSectionsState] = useState(() => {
     try {

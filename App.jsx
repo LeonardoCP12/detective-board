@@ -64,6 +64,8 @@ const Board = () => {
   const [editingEdge, setEditingEdge] = useState(null);
   const [pendingStampNodeId, setPendingStampNodeId] = useState(null);
   const [isBoardLoading, setIsBoardLoading] = useState(false);
+  const [syncError, setSyncError] = useState(null); // Nuevo estado para errores de conexión
+  const [retryTrigger, setRetryTrigger] = useState(0); // Disparador para reintentar
   const [isBoardsSynced, setIsBoardsSynced] = useState(false); // Nuevo estado para controlar la sincronización inicial
   const boardDataLoadedRef = useRef(false); // Referencia para saber si ya cargamos datos válidos
   
@@ -152,6 +154,7 @@ const Board = () => {
 
       if (currentBoardId) {
         setIsBoardLoading(true);
+        setSyncError(null); // Limpiar errores previos
         boardDataLoadedRef.current = false; // Bloquear guardado al empezar a cargar
         try {
           const data = await loadBoard(currentBoardId);
@@ -177,8 +180,10 @@ const Board = () => {
         } catch (error) {
           if (error.code === 'unavailable' || error.message?.includes('offline')) {
              console.warn("Modo offline: No se pudo sincronizar con la nube, usando caché local si existe.");
+             setSyncError('offline');
           } else {
              console.error("Error cargando tablero:", error);
+             setSyncError('error');
           }
           // NO marcamos boardDataLoadedRef como true, así evitamos sobrescribir con vacío si hubo error de red
         } finally {
@@ -187,7 +192,7 @@ const Board = () => {
       }
     };
     fetchBoard();
-  }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType, isBoardsSynced, boards]);
+  }, [currentBoardId, loadBoard, setNodes, setEdges, setBgType, isBoardsSynced, boards, retryTrigger]);
 
   // Efecto para guardar automáticamente en Firestore (Debounce)
   useEffect(() => {
@@ -416,6 +421,8 @@ const Board = () => {
           onLogout={handleLogout}
           currentUser={currentUser}
           isSyncing={isBoardLoading || !isBoardsSynced}
+          syncError={syncError}
+          onRetry={() => setRetryTrigger(prev => prev + 1)}
         />}
         
         <div 
