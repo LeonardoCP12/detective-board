@@ -19,9 +19,9 @@ const useFirestore = () => {
         updatedAt: serverTimestamp(),
         ownerId: currentUser.uid 
       }, { merge: true });
-      console.log(`[NUBE] ✅ Guardado exitoso. Deberías ver la colección 'users' -> '${currentUser.uid}' en Firestore.`);
+      console.log(`[NUBE] ✅ Guardado exitoso.`);
     } catch (e) {
-      console.error("❌ ERROR CRÍTICO al guardar en Firestore (Revisa Reglas o Conexión):", e);
+      console.error("❌ ERROR CRÍTICO al guardar en Firestore:", e);
       throw e;
     }
   }, [currentUser]);
