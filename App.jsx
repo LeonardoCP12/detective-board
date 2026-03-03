@@ -68,6 +68,7 @@ const Board = () => {
   const [syncError, setSyncError] = useState(null); // Nuevo estado para errores de conexión
   const [retryTrigger, setRetryTrigger] = useState(0); // Disparador para reintentar
   const [isSaving, setIsSaving] = useState(false); // Estado para el indicador "Guardando..."
+  const [saveStatus, setSaveStatus] = useState(null); // 'saving' | 'success' | 'error'
   const [isBoardsSynced, setIsBoardsSynced] = useState(false); // Nuevo estado para controlar la sincronización inicial
   const boardDataLoadedRef = useRef(false); // Referencia para saber si ya cargamos datos válidos
   const lastSavedDataRef = useRef(null); // Referencia para evitar guardados redundantes (bucle infinito)
@@ -219,27 +220,25 @@ const Board = () => {
       if (!currentBoardId || !boardDataLoadedRef.current || isBoardLoading || syncError) return;
       
       const boardName = boards.find(b => b.id === currentBoardId)?.name || 'Caso Sin Nombre';
-      const dataToSave = {
-        nodes,
-        edges,
-        bgType,
-        name: boardName
-      };
-      
+      const dataToSave = { nodes, edges, bgType, name: boardName };
       const dataString = JSON.stringify(dataToSave);
       
-      // Solo guardar si hay cambios reales respecto a lo último guardado
       if (!force && lastSavedDataRef.current === dataString) return;
 
+      setSaveStatus('saving');
       setIsSaving(true);
       try {
           await saveBoard(currentBoardId, dataToSave);
           lastSavedDataRef.current = dataString;
           setLastSaved(new Date());
-          console.log("Guardado automático completado.");
-          setIsSaving(false);
+          setSaveStatus('success');
+          setTimeout(() => setSaveStatus(null), 3000); // Desaparece a los 3s
       } catch (error) {
           console.error("Error al guardar:", error);
+          setSaveStatus('error');
+          setTimeout(() => setSaveStatus(null), 5000); // El error dura más
+      } finally {
+          setIsSaving(false);
       }
   }, [currentBoardId, nodes, edges, bgType, boards, saveBoard, isBoardLoading, syncError]);
 
@@ -563,6 +562,27 @@ const Board = () => {
               <div className="w-16 h-16 border-4 border-red-600 border-t-transparent rounded-full animate-spin mb-4"></div>
               <h2 className="text-xl font-bold text-white font-mono tracking-widest animate-pulse">REVELANDO EVIDENCIA...</h2>
               <p className="text-zinc-400 text-xs font-mono mt-2">Procesando fotografía del tablero completo.</p>
+            </div>
+          )}
+
+          {/* Indicador de Guardado */}
+          {saveStatus && (
+            <div className="absolute bottom-6 right-6 z-[110] animate-in fade-in slide-in-from-bottom-4 duration-300">
+              <div className={`flex items-center gap-3 px-5 py-3 rounded-lg shadow-2xl border font-mono text-sm font-bold tracking-wider
+                ${saveStatus === 'saving' ? 'bg-zinc-900 border-zinc-700 text-zinc-300' : ''}
+                ${saveStatus === 'success' ? 'bg-zinc-900 border-green-500/50 text-green-400' : ''}
+                ${saveStatus === 'error' ? 'bg-zinc-900 border-red-500/50 text-red-400' : ''}
+              `}>
+                {saveStatus === 'saving' && (
+                  <><div className="w-4 h-4 border-2 border-zinc-400 border-t-transparent rounded-full animate-spin" /> GUARDANDO...</>
+                )}
+                {saveStatus === 'success' && (
+                  <><span className="text-green-400 text-base">✓</span> EXPEDIENTE GUARDADO</>
+                )}
+                {saveStatus === 'error' && (
+                  <><span className="text-red-400 text-base">✕</span> ERROR AL GUARDAR — Revisa conexión</>
+                )}
+              </div>
             </div>
           )}
 

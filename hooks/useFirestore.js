@@ -22,6 +22,7 @@ const useFirestore = () => {
       console.log(`[NUBE] ✅ Guardado exitoso. Deberías ver la colección 'users' -> '${currentUser.uid}' en Firestore.`);
     } catch (e) {
       console.error("❌ ERROR CRÍTICO al guardar en Firestore (Revisa Reglas o Conexión):", e);
+      throw e;
     }
   }, [currentUser]);
 
