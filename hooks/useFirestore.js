@@ -31,15 +31,14 @@ const sanitizeEdge = (edge) => ({
   animated: edge.animated ?? null,
 });
 
-// ─── Subir imagen a Firebase Storage con timeout ─────────────────────────────
+// ─── Subir imagen a Firebase Storage ─────────────────────────────────────────
 const uploadImageToStorage = async (base64String, userId, boardId, nodeId) => {
   if (!base64String || !base64String.startsWith('data:image')) {
-    return base64String; // Ya es URL normal
+    return base64String; // Ya es URL normal, no hacer nada
   }
 
-  // Timeout de 15 segundos para no quedarse colgado
   const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Upload timeout - Storage podría no estar habilitado')), 15000)
+    setTimeout(() => reject(new Error('Upload timeout')), 20000)
   );
 
   const upload = async () => {
@@ -54,13 +53,32 @@ const uploadImageToStorage = async (base64String, userId, boardId, nodeId) => {
     console.log(`[STORAGE] ✅ Imagen subida para nodo ${nodeId}`);
     return url;
   } catch (error) {
-    // Si Firebase Storage no está habilitado o las reglas bloquean,
-    // guardar null en lugar de colgar. La imagen se perderá pero el tablero se guarda.
     console.error(`[STORAGE] ❌ Error subiendo imagen del nodo ${nodeId}:`, error.message);
-    console.warn(`[STORAGE] ⚠️ Verifica que Firebase Storage esté habilitado en tu proyecto`);
-    console.warn(`[STORAGE] ⚠️ Y que las Storage Rules permitan escritura autenticada`);
     return null;
   }
+};
+
+// ─── Procesar imagen de un nodo: subir si es base64, devolver URL ─────────────
+// También maneja el caso donde ImageNode convirtió una URL de Storage a base64
+// para exportación local. En ese caso también hay que volver a subir.
+const processNodeImage = async (node, userId, boardId) => {
+  const image = node.data?.image;
+  if (!image) return node;
+
+  // Si ya es URL de Firebase Storage, no hacer nada
+  if (image.startsWith('https://firebasestorage.googleapis.com') ||
+      image.startsWith('https://storage.googleapis.com')) {
+    return node;
+  }
+
+  // Si es base64 (local o reconvertida desde URL), subir a Storage
+  if (image.startsWith('data:image')) {
+    const imageUrl = await uploadImageToStorage(image, userId, boardId, node.id);
+    return { ...node, data: { ...node.data, image: imageUrl } };
+  }
+
+  // Cualquier otra URL (http externo), dejarla como está
+  return node;
 };
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -77,17 +95,9 @@ const useFirestore = () => {
       const sanitizedNodes = (boardData.nodes || []).map(sanitizeNode);
       const sanitizedEdges = (boardData.edges || []).map(sanitizeEdge);
 
-      // 2. Subir imágenes base64 a Firebase Storage (con timeout de seguridad)
+      // 2. Procesar imágenes: subir base64 a Storage, conservar URLs de Storage
       const processedNodes = await Promise.all(
-        sanitizedNodes.map(async (node) => {
-          if (node.data?.image && node.data.image.startsWith('data:image')) {
-            const imageUrl = await uploadImageToStorage(
-              node.data.image, currentUser.uid, boardId, node.id
-            );
-            return { ...node, data: { ...node.data, image: imageUrl } };
-          }
-          return node;
-        })
+        sanitizedNodes.map((node) => processNodeImage(node, currentUser.uid, boardId))
       );
 
       // 3. JSON round-trip para eliminar undefined

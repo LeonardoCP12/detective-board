@@ -22,7 +22,10 @@ const ImageNode = ({ id, data, selected, isDarkMode }) => {
     }
   }, [data.filters]);
 
-  // Intentar convertir imágenes externas a Base64 automáticamente para evitar errores de CORS al exportar
+  // Cargar imagen desde URL al estado local para renderizado.
+  // IMPORTANTE: Solo actualizamos el estado local (src), NO el nodo.
+  // Si escribiéramos base64 de vuelta al nodo, cada guardado en Firestore
+  // fallaría porque base64 no es compatible con el límite de documentos.
   useEffect(() => {
     if (data.image && data.image.startsWith('http')) {
       const img = new Image();
@@ -36,18 +39,18 @@ const ImageNode = ({ id, data, selected, isDarkMode }) => {
           const ctx = canvas.getContext('2d');
           ctx.drawImage(img, 0, 0);
           const dataURL = canvas.toDataURL('image/jpeg');
-          
-          // Si la conversión fue exitosa, actualizamos el estado y el nodo
+          // Solo actualizar el estado visual local, nunca el nodo
           if (dataURL.length > 100) {
             setSrc(dataURL);
-            setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, image: dataURL } } : n));
           }
         } catch (e) {
-          // Si falla por CORS estricto, no podemos hacer nada, se queda como URL
+          // CORS bloqueado: usar la URL directamente para renderizar
+          setSrc(data.image);
         }
       };
+      img.onerror = () => setSrc(data.image);
     }
-  }, []); // Se ejecuta solo al montar el componente
+  }, [data.image]);
 
   const toggleLock = (e) => {
     e.stopPropagation();
