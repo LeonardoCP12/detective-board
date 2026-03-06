@@ -1,6 +1,7 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
+import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
 
 // Configuración de tu proyecto Firebase
@@ -28,5 +29,6 @@ export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
 });
 
+export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 export { analytics };
