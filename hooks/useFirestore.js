@@ -1,8 +1,12 @@
 import { useCallback } from 'react';
-import { db, storage } from '../firebase';
+import { db } from '../firebase';
 import { doc, setDoc, getDoc, collection, getDocs, deleteDoc, query, serverTimestamp } from 'firebase/firestore';
-import { ref, uploadString, getDownloadURL } from 'firebase/storage';
 import { useAuth } from '../contexts/AuthContext';
+
+// ─── Cloudinary config ────────────────────────────────────────────────────────
+const CLOUDINARY_CLOUD_NAME = 'daebsaogp';
+const CLOUDINARY_UPLOAD_PRESET = 'detective_board';
+const CLOUDINARY_URL = `https://api.cloudinary.com/v1_1/${CLOUDINARY_CLOUD_NAME}/image/upload`;
 
 // ─── Sanitizar nodos: elimina internals de ReactFlow ─────────────────────────
 const sanitizeNode = (node) => ({
@@ -31,53 +35,70 @@ const sanitizeEdge = (edge) => ({
   animated: edge.animated ?? null,
 });
 
-// ─── Subir imagen a Firebase Storage ─────────────────────────────────────────
-const uploadImageToStorage = async (base64String, userId, boardId, nodeId) => {
-  if (!base64String || !base64String.startsWith('data:image')) {
-    return base64String; // Ya es URL normal, no hacer nada
+// ─── Subir imagen a Cloudinary ────────────────────────────────────────────────
+// Acepta base64 (imágenes locales) o URLs externas (https://...)
+const uploadImageToCloudinary = async (image, nodeId) => {
+  if (!image) return null;
+
+  // Si ya es una URL de Cloudinary, no volver a subir
+  if (image.includes('cloudinary.com')) {
+    return image;
   }
 
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('Upload timeout')), 20000)
-  );
-
-  const upload = async () => {
-    const imagePath = `users/${userId}/boards/${boardId}/nodes/${nodeId}.jpg`;
-    const imageRef = ref(storage, imagePath);
-    await uploadString(imageRef, base64String, 'data_url');
-    return await getDownloadURL(imageRef);
-  };
-
   try {
-    const url = await Promise.race([upload(), timeout]);
-    console.log(`[STORAGE] ✅ Imagen subida para nodo ${nodeId}`);
-    return url;
+    console.log(`[CLOUDINARY] ⬆️ Subiendo imagen del nodo ${nodeId}...`);
+
+    const formData = new FormData();
+    formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
+    formData.append('public_id', `detective-board/nodes/${nodeId}`);
+
+    // Base64 (imagen local subida desde escritorio)
+    if (image.startsWith('data:image')) {
+      formData.append('file', image);
+    }
+    // URL externa (https://...)
+    else if (image.startsWith('http')) {
+      formData.append('file', image);
+    }
+    // No es imagen válida
+    else {
+      return image;
+    }
+
+    const response = await fetch(CLOUDINARY_URL, {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      const err = await response.json();
+      throw new Error(err.error?.message || `HTTP ${response.status}`);
+    }
+
+    const data = await response.json();
+    console.log(`[CLOUDINARY] ✅ Imagen subida: ${data.secure_url}`);
+    return data.secure_url;
+
   } catch (error) {
-    console.error(`[STORAGE] ❌ Error subiendo imagen del nodo ${nodeId}:`, error.message);
+    console.error(`[CLOUDINARY] ❌ Error subiendo imagen del nodo ${nodeId}:`, error.message);
     return null;
   }
 };
 
-// ─── Procesar imagen de un nodo: subir si es base64, devolver URL ─────────────
-// También maneja el caso donde ImageNode convirtió una URL de Storage a base64
-// para exportación local. En ese caso también hay que volver a subir.
-const processNodeImage = async (node, userId, boardId) => {
+// ─── Procesar imagen de un nodo ───────────────────────────────────────────────
+const processNodeImage = async (node) => {
   const image = node.data?.image;
   if (!image) return node;
 
-  // Si ya es URL de Firebase Storage, no hacer nada
-  if (image.startsWith('https://firebasestorage.googleapis.com') ||
-      image.startsWith('https://storage.googleapis.com')) {
-    return node;
-  }
+  // Ya es URL de Cloudinary, no hacer nada
+  if (image.includes('cloudinary.com')) return node;
 
-  // Si es base64 (local o reconvertida desde URL), subir a Storage
-  if (image.startsWith('data:image')) {
-    const imageUrl = await uploadImageToStorage(image, userId, boardId, node.id);
+  // Es base64 o URL externa → subir a Cloudinary
+  if (image.startsWith('data:image') || image.startsWith('http')) {
+    const imageUrl = await uploadImageToCloudinary(image, node.id);
     return { ...node, data: { ...node.data, image: imageUrl } };
   }
 
-  // Cualquier otra URL (http externo), dejarla como está
   return node;
 };
 
@@ -95,9 +116,9 @@ const useFirestore = () => {
       const sanitizedNodes = (boardData.nodes || []).map(sanitizeNode);
       const sanitizedEdges = (boardData.edges || []).map(sanitizeEdge);
 
-      // 2. Procesar imágenes: subir base64 a Storage, conservar URLs de Storage
+      // 2. Subir imágenes a Cloudinary (base64 o URLs externas → URL de Cloudinary)
       const processedNodes = await Promise.all(
-        sanitizedNodes.map((node) => processNodeImage(node, currentUser.uid, boardId))
+        sanitizedNodes.map((node) => processNodeImage(node))
       );
 
       // 3. JSON round-trip para eliminar undefined

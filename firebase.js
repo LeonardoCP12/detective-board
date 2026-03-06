@@ -1,10 +1,8 @@
 import { initializeApp } from "firebase/app";
 import { getAuth, GoogleAuthProvider } from "firebase/auth";
 import { initializeFirestore, persistentLocalCache, persistentMultipleTabManager } from "firebase/firestore";
-import { getStorage } from "firebase/storage";
 import { getAnalytics } from "firebase/analytics";
 
-// Configuración de tu proyecto Firebase
 const firebaseConfig = {
   apiKey: "AIzaSyBRvglSh40aRJFOA9SNxoyBhNjslW_7p8k",
   authDomain: "detective-board-b108b.firebaseapp.com",
@@ -15,13 +13,11 @@ const firebaseConfig = {
   measurementId: "G-TBJ91VEM4Y"
 };
 
-// Inicializar Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
 
 export const auth = getAuth(app);
 
-// Inicializar Firestore con la nueva configuración de persistencia (cache)
 export const db = initializeFirestore(app, {
   localCache: persistentLocalCache({
     tabManager: persistentMultipleTabManager()
@@ -29,6 +25,5 @@ export const db = initializeFirestore(app, {
   experimentalForceLongPolling: true
 });
 
-export const storage = getStorage(app);
 export const googleProvider = new GoogleAuthProvider();
 export { analytics };
