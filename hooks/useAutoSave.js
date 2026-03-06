@@ -1,3 +1,4 @@
+import { saveNodesToStorage, saveEdgesToStorage } from '../utils/storageUtils';
 // c:\Users\User\Desktop\Tablero\hooks\useAutoSave.js
 import { useEffect } from 'react';
 
@@ -5,8 +6,8 @@ const useAutoSave = ({ nodes, edges, bgType, currentBoardId, setLastSaved }) => 
   useEffect(() => {
     const saveTimeout = setTimeout(() => {
       try {
-        localStorage.setItem(`board-${currentBoardId}-nodes`, JSON.stringify(nodes));
-        localStorage.setItem(`board-${currentBoardId}-edges`, JSON.stringify(edges));
+        saveNodesToStorage(currentBoardId, nodes);
+        saveEdgesToStorage(currentBoardId, edges);
         localStorage.setItem(`board-${currentBoardId}-bg`, bgType);
         setLastSaved(new Date());
       } catch (e) {

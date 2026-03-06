@@ -1,7 +1,7 @@
 // c:\Users\User\Desktop\Tablero\hooks\useBoardManagement.js
 import { useState, useEffect, useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
-import { getBoardData } from '../utils/storageUtils';
+import { getBoardData, saveNodesToStorage, saveEdgesToStorage } from '../utils/storageUtils';
 
 const DEFAULT_BOARD_ID = 'default-case';
 
@@ -84,8 +84,8 @@ const useBoardManagement = ({
   // Cambiar Tablero
   const handleSwitchBoard = useCallback((boardId) => {
       // Guardar estado actual
-      localStorage.setItem(`board-${currentBoardId}-nodes`, JSON.stringify(nodes));
-      localStorage.setItem(`board-${currentBoardId}-edges`, JSON.stringify(edges));
+      saveNodesToStorage(currentBoardId, nodes);
+      saveEdgesToStorage(currentBoardId, edges);
       localStorage.setItem(`board-${currentBoardId}-bg`, bgType);
 
       // Cargar nuevo estado
@@ -224,8 +224,8 @@ const useBoardManagement = ({
               lastModified: Date.now(),
             };
 
-            localStorage.setItem(`board-${newId}-nodes`, JSON.stringify(nodesData));
-            localStorage.setItem(`board-${newId}-edges`, JSON.stringify(edgesData));
+            saveNodesToStorage(newId, nodesData);
+            saveEdgesToStorage(newId, edgesData);
             localStorage.setItem(`board-${newId}-bg`, bgData);
 
             setBoards(prev => {

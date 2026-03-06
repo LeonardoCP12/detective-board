@@ -1,4 +1,5 @@
 // c:\Users\User\Desktop\Tablero\hooks\useFileOperations.js
+import { saveNodesToStorage, saveEdgesToStorage } from '../utils/storageUtils';
 import { useCallback } from 'react';
 import { v4 as uuidv4 } from 'uuid';
 
@@ -61,8 +62,8 @@ const useFileOperations = ({
               cancelText: 'Cancelar',
               isDanger: true,
               onConfirm: () => {
-                localStorage.setItem(`board-${existingBoard.id}-nodes`, JSON.stringify(nodesData));
-                localStorage.setItem(`board-${existingBoard.id}-edges`, JSON.stringify(edgesData));
+                saveNodesToStorage(existingBoard.id, nodesData);
+                saveEdgesToStorage(existingBoard.id, edgesData);
                 localStorage.setItem(`board-${existingBoard.id}-bg`, bg);
 
                 if (existingBoard.id === currentBoardId) {
@@ -79,8 +80,8 @@ const useFileOperations = ({
             const newId = uuidv4();
             const newBoard = { id: newId, name: fileName, createdAt: Date.now(), lastModified: Date.now() };
             
-            localStorage.setItem(`board-${newId}-nodes`, JSON.stringify(nodesData));
-            localStorage.setItem(`board-${newId}-edges`, JSON.stringify(edgesData));
+            saveNodesToStorage(newId, nodesData);
+            saveEdgesToStorage(newId, edgesData);
             localStorage.setItem(`board-${newId}-bg`, bg);
             
             setBoards(prev => [...prev, newBoard]);
