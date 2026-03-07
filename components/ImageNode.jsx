@@ -68,16 +68,16 @@ const ImageNode = ({ id, data, selected, isDarkMode }) => {
   const handleUpload = (e) => {
     const file = e.target.files[0];
     if (file) {
+      // Alta resolución: 1920px máx, calidad 0.92 — para que el zoom HD se vea nítido
       processImage(file, (compressedImage, width, height) => {
         setSrc(compressedImage);
-        // Actualización inmutable correcta
         setNodes((nds) => nds.map((n) => {
           if (n.id === id) {
             return { ...n, data: { ...n.data, image: compressedImage }, style: { ...n.style, width, height } };
           }
           return n;
         }));
-      });
+      }, 1920, 0.92);
     }
   };
 
