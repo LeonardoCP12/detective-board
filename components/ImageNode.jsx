@@ -69,11 +69,17 @@ const ImageNode = ({ id, data, selected, isDarkMode }) => {
     const file = e.target.files[0];
     if (file) {
       // Alta resolución: 1920px máx, calidad 0.92 — para que el zoom HD se vea nítido
-      processImage(file, (compressedImage, width, height) => {
+      // El nodo siempre inicia en 280x280px fijo; el usuario puede redimensionar libremente
+      processImage(file, (compressedImage) => {
         setSrc(compressedImage);
         setNodes((nds) => nds.map((n) => {
           if (n.id === id) {
-            return { ...n, data: { ...n.data, image: compressedImage }, style: { ...n.style, width, height } };
+            const alreadyHasSize = n.style?.width && n.style?.height;
+            return {
+              ...n,
+              data: { ...n.data, image: compressedImage },
+              style: { ...n.style, width: alreadyHasSize ? n.style.width : 280, height: alreadyHasSize ? n.style.height : 280 }
+            };
           }
           return n;
         }));
