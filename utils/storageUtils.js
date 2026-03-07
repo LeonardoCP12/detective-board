@@ -44,7 +44,7 @@ export const saveNodesToStorage = (boardId, nodes) => {
     const clean = (nodes || []).map(sanitizeNodeForStorage);
     localStorage.setItem(`board-${boardId}-nodes`, JSON.stringify(clean));
   } catch (e) {
-    console.warn('No se pudo guardar nodos en localStorage:', e.message);
+    // console.warn('No se pudo guardar nodos en localStorage:', e.message);
   }
 };
 
@@ -54,7 +54,7 @@ export const saveEdgesToStorage = (boardId, edges) => {
     const clean = (edges || []).map(sanitizeEdgeForStorage);
     localStorage.setItem(`board-${boardId}-edges`, JSON.stringify(clean));
   } catch (e) {
-    console.warn('No se pudo guardar edges en localStorage:', e.message);
+    // console.warn('No se pudo guardar edges en localStorage:', e.message);
   }
 };
 

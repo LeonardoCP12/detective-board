@@ -89,7 +89,7 @@ const useFileOperations = ({
           }
         }
       } catch (error) {
-        console.error("Error al cargar el caso", error);
+        // console.error("Error al cargar el caso", error);
         alert("El archivo no es válido.");
       }
     };

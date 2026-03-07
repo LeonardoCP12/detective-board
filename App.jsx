@@ -135,10 +135,10 @@ const Board = () => {
           if (formattedBoards.length > 0 && (!currentBoardId || !formattedBoards.find(b => b.id === currentBoardId))) {
               setCurrentBoardId(formattedBoards[0].id);
           } else if (formattedBoards.length === 0) {
-            console.log("No se encontraron tableros remotos.");
+            // console.log("No se encontraron tableros remotos.");
           }
         } catch (error) {
-          console.error("Error sincronizando tableros:", error);
+          // console.error("Error sincronizando tableros:", error);
         } finally {
           setIsBoardsSynced(true); // Marcar como sincronizado (éxito o fallo)
         }
@@ -194,15 +194,15 @@ const Board = () => {
                 });
             } else {
                 // Es un ID obsoleto o inválido. NO inicializamos ni permitimos guardar.
-                console.warn("ID de tablero obsoleto detectado, omitiendo carga para evitar sobrescritura.");
+                // console.warn("ID de tablero obsoleto detectado, omitiendo carga para evitar sobrescritura.");
             }
           }
         } catch (error) {
           if (error.code === 'unavailable' || error.message?.includes('offline')) {
-             console.warn("Modo offline: No se pudo sincronizar con la nube, usando caché local si existe.");
+             // console.warn("Modo offline: No se pudo sincronizar con la nube, usando caché local si existe.");
              setSyncError('offline');
           } else {
-             console.error("Error cargando tablero:", error);
+             // console.error("Error cargando tablero:", error);
              setSyncError('error');
           }
           // NO marcamos boardDataLoadedRef como true, así evitamos sobrescribir con vacío si hubo error de red
@@ -234,7 +234,7 @@ const Board = () => {
           setSaveStatus('success');
           setTimeout(() => setSaveStatus(null), 3000); // Desaparece a los 3s
       } catch (error) {
-          console.error("Error al guardar:", error);
+          // console.error("Error al guardar:", error);
           setSaveStatus('error');
           setTimeout(() => setSaveStatus(null), 5000); // El error dura más
       } finally {
@@ -436,7 +436,7 @@ const Board = () => {
     try {
       await signOut(auth);
     } catch (error) {
-      console.error("Error al cerrar sesión", error);
+      // console.error("Error al cerrar sesión", error);
     }
   };
 

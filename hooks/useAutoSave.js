@@ -11,7 +11,7 @@ const useAutoSave = ({ nodes, edges, bgType, currentBoardId, setLastSaved }) => 
         localStorage.setItem(`board-${currentBoardId}-bg`, bgType);
         setLastSaved(new Date());
       } catch (e) {
-        console.error("Error guardando en localStorage:", e);
+        // console.error("Error guardando en localStorage:", e);
       }
     }, 1000); // Espera 1 segundo de inactividad antes de guardar
 

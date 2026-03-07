@@ -290,7 +290,7 @@ const ImageNode = ({ id, data, selected, isDarkMode }) => {
                       const dataURL = canvas.toDataURL('image/jpeg');
                       setSrc(dataURL);
                       setNodes((nds) => nds.map((n) => n.id === id ? { ...n, data: { ...n.data, image: dataURL } } : n));
-                    } catch (e) { console.warn("CORS blocked", e); }
+                    } catch (e) { /* console.warn("CORS blocked", e); */ }
                   };
                   img.src = url;
                 } 

@@ -48,7 +48,7 @@ const SignUp = ({ onSwitchToLogin, isDarkMode }) => {
         return setError('No se permiten correos temporales.');
       }
     } catch (err) {
-      console.warn("MailCheck no disponible, continuando con whitelist.");
+      //  console.warn("MailCheck no disponible, continuando con whitelist.");
     }
 
     try {

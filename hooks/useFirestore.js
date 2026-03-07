@@ -46,7 +46,7 @@ const uploadImageToCloudinary = async (image, nodeId) => {
   }
 
   try {
-    console.log(`[CLOUDINARY] ⬆️ Subiendo imagen del nodo ${nodeId}...`);
+    // console.log(`[CLOUDINARY] ⬆️ Subiendo imagen del nodo ${nodeId}...`);
 
     const formData = new FormData();
     formData.append('upload_preset', CLOUDINARY_UPLOAD_PRESET);
@@ -76,11 +76,11 @@ const uploadImageToCloudinary = async (image, nodeId) => {
     }
 
     const data = await response.json();
-    console.log(`[CLOUDINARY] ✅ Imagen subida: ${data.secure_url}`);
+    // console.log(`[CLOUDINARY] ✅ Imagen subida: ${data.secure_url}`);
     return data.secure_url;
 
   } catch (error) {
-    console.error(`[CLOUDINARY] ❌ Error subiendo imagen del nodo ${nodeId}:`, error.message);
+    // console.error(`[CLOUDINARY] ❌ Error subiendo imagen del nodo ${nodeId}:`, error.message);
     return null;
   }
 };
@@ -110,7 +110,7 @@ const useFirestore = () => {
   const saveBoard = useCallback(async (boardId, boardData) => {
     if (!currentUser || !boardId) return;
     try {
-      console.log(`[NUBE] ☁️ Intentando guardar tablero ${boardId}...`);
+      // console.log(`[NUBE] ☁️ Intentando guardar tablero ${boardId}...`);
 
       // 1. Eliminar propiedades internas de ReactFlow
       const sanitizedNodes = (boardData.nodes || []).map(sanitizeNode);
@@ -135,9 +135,9 @@ const useFirestore = () => {
         ownerId: currentUser.uid,
       }, { merge: true });
 
-      console.log(`[NUBE] ✅ Guardado exitoso.`);
+      // console.log(`[NUBE] ✅ Guardado exitoso.`);
     } catch (e) {
-      console.error("❌ ERROR CRÍTICO al guardar en Firestore:", e);
+      // console.error("❌ ERROR CRÍTICO al guardar en Firestore:", e);
       throw e;
     }
   }, [currentUser]);
@@ -145,13 +145,13 @@ const useFirestore = () => {
   const loadBoard = useCallback(async (boardId) => {
     if (!currentUser || !boardId) return null;
     try {
-      console.log(`[NUBE] Descargando tablero ${boardId}...`);
+      // console.log(`[NUBE] Descargando tablero ${boardId}...`);
       const boardRef = doc(db, 'users', currentUser.uid, 'boards', boardId);
       const docSnap = await getDoc(boardRef);
       if (docSnap.exists()) return docSnap.data();
       return null;
     } catch (e) {
-      console.error("Error al cargar de Firestore:", e);
+      // console.error("Error al cargar de Firestore:", e);
       throw e;
     }
   }, [currentUser]);
@@ -159,12 +159,12 @@ const useFirestore = () => {
   const getBoards = useCallback(async () => {
     if (!currentUser) return [];
     try {
-      console.log(`[NUBE] Sincronizando lista de casos...`);
+      // console.log(`[NUBE] Sincronizando lista de casos...`);
       const boardsRef = collection(db, 'users', currentUser.uid, 'boards');
       const querySnapshot = await getDocs(query(boardsRef));
       return querySnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
     } catch (e) {
-      console.error("Error al obtener tableros:", e);
+      // console.error("Error al obtener tableros:", e);
       throw e;
     }
   }, [currentUser]);

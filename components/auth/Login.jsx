@@ -28,7 +28,7 @@ const Login = ({ onSwitchToSignUp, onForgotPassword, isDarkMode }) => {
     } catch (err) {
 
 
-      console.error(err);
+      //  console.error(err);
       setError('Error: ' + err.message);
     }
   };
@@ -38,7 +38,7 @@ const Login = ({ onSwitchToSignUp, onForgotPassword, isDarkMode }) => {
     try {
       await signInWithPopup(auth, googleProvider);
     } catch (err) {
-      console.error(err);
+      // console.error(err);
       if (err.code === 'auth/cancelled-popup-request') {
         setError(''); // Ignorar si el usuario cerró la ventana voluntariamente
       } else {

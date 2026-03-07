@@ -223,7 +223,7 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
                                     allowFullScreen
                                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation allow-modals allow-popups-to-escape-sandbox"
                                     onError={(e) => {
-                                        console.warn('Error loading iframe:', data.url);
+                                        // console.warn('Error loading iframe:', data.url);
                                         e.target.style.display = 'none';
                                     }}
                                 />

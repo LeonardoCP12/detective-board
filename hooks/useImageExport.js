@@ -132,7 +132,7 @@ const useImageExport = ({ reactFlowWrapper, reactFlowInstance, boards, currentBo
         // Intentar primero con CORS habilitado para capturar imágenes externas
         dataUrl = await toPng(flowElement, { ...options, useCORS: true });
       } catch (corsError) {
-        console.warn('Error exportando con CORS, reintentando sin CORS...', corsError);
+        // console.warn('Error exportando con CORS, reintentando sin CORS...', corsError);
         await new Promise(resolve => setTimeout(resolve, 1000)); // Pausa para estabilizar red
         // Si falla (ej: imágenes bloqueadas), reintentar sin CORS (las imágenes externas podrían no salir)
         dataUrl = await toPng(flowElement, { ...options, useCORS: false });
@@ -180,7 +180,7 @@ const useImageExport = ({ reactFlowWrapper, reactFlowInstance, boards, currentBo
       link.href = dataUrl;
       link.click();
     } catch (err) {
-      console.error('Error al exportar', err);
+      // console.error('Error al exportar', err);
       alert('Error al generar la imagen. Si utilizas imágenes externas (URL), es posible que tengan restricciones de seguridad (CORS).');
     } finally {
       reactFlowInstance.setViewport({ x, y, zoom });
