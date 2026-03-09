@@ -8,10 +8,11 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
   const [urlInput, setUrlInput] = useState(data.url || '');
   const [isEditing, setIsEditing] = useState(!data.url);
   const showIframe = !!data.showIframe;
-  const [iframeLoaded, setIframeLoaded] = useState(false); // Nuevo estado para controlar la carga del iframe
+  const [iframeLoaded, setIframeLoaded] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
-  const [thumbnailSrc, setThumbnailSrc] = useState(null);
-  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(true);
+  // FIX: Inicializar desde data.thumbnailSrc si ya existe
+  const [thumbnailSrc, setThumbnailSrc] = useState(data.thumbnailSrc || null);
+  const [isLoadingThumbnail, setIsLoadingThumbnail] = useState(!data.thumbnailSrc && !!data.url);
   const [imageError, setImageError] = useState(false);
   const isLocked = !!data.locked;
 
@@ -44,10 +45,16 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
 
   // Construimos la URL base de mshots
   const mshotsUrl = data.url ? `https://s.wordpress.com/mshots/v1/${encodeURIComponent(data.url)}?w=400&v=${refreshKey}` : null;
-  // Usamos wsrv.nl DIRECTAMENTE como primera opción para evitar el intento fallido y el error en consola
   const defaultThumbnailUrl = mshotsUrl ? `https://wsrv.nl/?url=${encodeURIComponent(mshotsUrl)}` : null;
 
   useEffect(() => {
+    // FIX: Si ya hay miniatura guardada y no se pidió refresh, usarla directamente
+    if (data.thumbnailSrc && refreshKey === 0) {
+      setThumbnailSrc(data.thumbnailSrc);
+      setIsLoadingThumbnail(false);
+      return;
+    }
+
     setThumbnailSrc(null);
     if (!defaultThumbnailUrl) return;
 
@@ -58,8 +65,7 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
       img.src = url;
       img.onload = () => {
         try {
-        
-        const canvas = document.createElement('canvas');
+          const canvas = document.createElement('canvas');
           canvas.width = img.width;
           canvas.height = img.height;
           const ctx = canvas.getContext('2d');
@@ -67,6 +73,12 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
           const dataURL = canvas.toDataURL('image/jpeg');
           setThumbnailSrc(dataURL);
           setIsLoadingThumbnail(false);
+          // FIX: Persistir la miniatura en el nodo para que sobreviva recargas
+          setNodes((nodes) =>
+            nodes.map((n) =>
+              n.id === id ? { ...n, data: { ...n.data, thumbnailSrc: dataURL } } : n
+            )
+          );
         } catch (e) {
           setIsLoadingThumbnail(false);
           setImageError(true);
@@ -102,13 +114,14 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
     setNodes((nodes) =>
       nodes.map((n) => {
         if (n.id === id) {
-          return { ...n, data: { ...n.data, url: finalUrl, showIframe: false } };
+          // FIX: Limpiar miniatura guardada al cambiar URL
+          return { ...n, data: { ...n.data, url: finalUrl, showIframe: false, thumbnailSrc: null } };
         }
         return n;
       })
     );
     setIsEditing(false);
-    setIframeLoaded(false); // Reiniciar el estado de carga del iframe
+    setIframeLoaded(false);
     setImageError(false);
     setIsLoadingThumbnail(true);
   };
@@ -118,19 +131,31 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
     setIframeLoaded(false);
     setImageError(false);
     setIsLoadingThumbnail(true);
+    // FIX: Limpiar miniatura guardada al editar
+    setNodes((nodes) =>
+      nodes.map((n) =>
+        n.id === id ? { ...n, data: { ...n.data, thumbnailSrc: null } } : n
+      )
+    );
   };
 
   const refreshThumbnail = (e) => {
     e.stopPropagation();
+    // FIX: Limpiar miniatura guardada para forzar recarga
+    setNodes((nodes) =>
+      nodes.map((n) =>
+        n.id === id ? { ...n, data: { ...n.data, thumbnailSrc: null } } : n
+      )
+    );
     setRefreshKey(prev => prev + 1);
-    setIframeLoaded(false); // Reiniciar el estado de carga del iframe
+    setIframeLoaded(false);
     setImageError(false);
     setIsLoadingThumbnail(true);
   };
 
   const handleToggleIframe = () => {
     const newState = !showIframe;
-    setIframeLoaded(false); // Reiniciar el estado de carga del iframe al alternar
+    setIframeLoaded(false);
     setNodes((nodes) =>
       nodes.map((n) => {
         if (n.id === id) {
@@ -223,7 +248,6 @@ const UrlNode = ({ id, data, selected, isDarkMode }) => {
                                     allowFullScreen
                                     sandbox="allow-scripts allow-same-origin allow-popups allow-forms allow-presentation allow-modals allow-popups-to-escape-sandbox"
                                     onError={(e) => {
-                                        // console.warn('Error loading iframe:', data.url);
                                         e.target.style.display = 'none';
                                     }}
                                 />

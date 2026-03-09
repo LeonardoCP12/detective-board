@@ -499,6 +499,8 @@ const Board = () => {
             nodeTypes={nodeTypes}
             edgeTypes={edgeTypes}
             fitView
+            minZoom={0.05}
+            maxZoom={4}
             className={`${bgType === 'cork' ? 'cork-pattern' : bgType === 'blackboard' ? 'blackboard-pattern' : 'graph-paper-pattern'} ${!isInteractive ? 'board-locked' : ''} ${isDarkMode ? '' : 'light-mode'}`}
             connectionLineType={connectionLineType}
             connectionLineStyle={connectionLineStyle}
